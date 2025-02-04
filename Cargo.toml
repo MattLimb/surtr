@@ -1,0 +1,13 @@
+[package]
+name = "surtr"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ascii = "1.1.0"
+idna = "1.0.3"
+lazy_static = "1.5.0"
+percent-encoding = "2.3.1"
+regex = "1.11.1"
+tld_extract = "0.1.0"
+urlencoding = "2.1.3"
