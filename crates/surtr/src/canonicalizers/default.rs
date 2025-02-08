@@ -13,6 +13,8 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
 
 #[cfg(test)]
 mod tests {
+    use crate::options::SurtrOptions;
+
     use super::*;
 
     #[test]

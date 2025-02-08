@@ -176,6 +176,8 @@ fn normalize_path(input: String) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::options::SurtrOptions;
+
     use super::*;
 
     #[test]

@@ -112,17 +112,20 @@ impl HandyUrl {
 
         // Host
         if self.host.is_some() {
-            if options.public_suffix {
+            if options.get_or("public_suffix", false) {
                 host_src = self.get_public_suffix();
             }
-            if options.surt {
-                host_src = Some(host_to_surt(host_src.unwrap(), options.reverse_ipaddr))
+            if options.get_or("surt", false) {
+                host_src = Some(host_to_surt(
+                    host_src.unwrap(),
+                    options.get_or("reverse_ipaddr", true),
+                ))
             }
         }
 
         // Scheme
         let mut scheme_parts: Vec<&str> = vec![];
-        if options.with_scheme {
+        if options.get_or("with_scheme", true) {
             match &self.scheme {
                 Some(sch) => scheme_parts.push(&sch),
                 None => return Err("no parsed scheme".to_string()),
@@ -134,7 +137,7 @@ impl HandyUrl {
                 if scheme_parts[0] != "dns" {
                     scheme_parts.push("//");
                 }
-                if options.surt {
+                if options.get_or("surt", false) {
                     scheme_parts.push("(");
                 }
             }
@@ -168,8 +171,8 @@ impl HandyUrl {
                 output_string = format!("{}:{}", output_string, port);
             }
 
-            if options.surt {
-                if options.trailing_comma {
+            if options.get_or("surt", false) {
+                if options.get_or("trailing_comma", false) {
                     output_string = format!("{},", output_string);
                 }
                 output_string = format!("{})", output_string);
@@ -252,6 +255,8 @@ impl Display for HandyUrl {
 
 #[cfg(test)]
 mod tests {
+    use crate::options::SurtrOptions;
+
     use super::*;
 
     #[test]

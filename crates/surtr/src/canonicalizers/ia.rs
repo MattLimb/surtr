@@ -13,24 +13,24 @@ lazy_static! {
 pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, String> {
     let mut url = url_input;
 
-    if options.host_lowercase && url.host.is_some() {
+    if options.get_or("host_lowercase", true) && url.host.is_some() {
         url.host = Some(url.host.unwrap().to_lowercase());
     }
 
     let scheme = &url.scheme.clone().unwrap_or(String::new());
 
-    if options.host_massage && url.host.is_some() && scheme != "dns" {
+    if options.get_or("host_massage", true) && url.host.is_some() && scheme != "dns" {
         url.host = Some(massage_host(url.host.unwrap()));
     }
 
-    if options.auth_strip_user {
+    if options.get_or("auth_strip_user", true) {
         url.auth_user = None;
         url.auth_pass = None;
-    } else if options.auth_strip_pass {
+    } else if options.get_or("auth_strip_pass", true) {
         url.auth_pass = None;
     }
 
-    if options.port_strip_default && url.scheme.is_some() {
+    if options.get_or("port_strip_default", true) && url.scheme.is_some() {
         let default_port = get_default_port(url.scheme.clone().unwrap());
 
         if let Some(port) = &url.port {
@@ -43,19 +43,19 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
     if let Some(mut path) = url.path {
         let mut should_be_none = false;
 
-        if options.path_strip_empty && &path == "/" {
+        if options.get_or("path_strip_empty", false) && &path == "/" {
             url.path = None;
         } else {
-            if options.path_lowercase {
+            if options.get_or("path_lowercase", true) {
                 path = path.to_lowercase()
             }
-            if options.path_strip_session_id {
+            if options.get_or("path_strip_session_id", true) {
                 path = strip_path_session_id(path);
             }
-            if options.path_strip_empty && &path == "/" {
+            if options.get_or("path_strip_empty", false) && &path == "/" {
                 should_be_none = true;
             }
-            if options.path_strip_trailing_slash_unless_empty {
+            if options.get_or("path_strip_trailing_slash_unless_empty", true) {
                 if path.ends_with('/') && path.len() > 1 {
                     path = path[0..(path.len() - 1)].to_string();
                 }
@@ -71,17 +71,17 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
 
     if let Some(mut query) = url.query {
         if query.len() > 0 {
-            if options.query_strip_session_id {
+            if options.get_or("query_strip_session_id", true) {
                 query = strip_query_session_id(query);
             }
-            if options.query_lowercase {
+            if options.get_or("query_lowercase", true) {
                 query = query.to_lowercase();
             }
-            if options.query_alpha_reorder {
+            if options.get_or("query_alpha_reorder", true) {
                 query = alpha_reorder_query(query);
             }
         }
-        if &query == "" && options.query_strip_empty {
+        if &query == "" && options.get_or("query_strip_empty", true) {
             url.query = None
         } else {
             url.query = Some(query)
@@ -139,6 +139,8 @@ fn get_default_port(scheme: String) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::options::SurtrOptions;
+
     use super::*;
 
     #[test]

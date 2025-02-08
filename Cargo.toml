@@ -1,12 +1,3 @@
-[package]
-name = "surtr"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-[dependencies]
-ascii = "1.1.0"
-idna = "1.0.3"
-lazy_static = "1.5.0"
-percent-encoding = "2.3.1"
-regex = "1.11.1"
-tld_extract = "0.1.0"
+members = ["crates/surtr"]
