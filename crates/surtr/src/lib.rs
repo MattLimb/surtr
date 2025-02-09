@@ -1,25 +1,27 @@
+pub mod handy_url;
+pub mod options;
+
 mod canonicalizers;
-mod handy_url;
-mod options;
 mod regex_transformer;
 mod url_split;
-type Canonicalizer = &'static dyn Fn(
-    handy_url::HandyUrl,
-    &options::SurtrOptions,
-) -> Result<handy_url::HandyUrl, String>;
 
-pub fn surt(
+pub type Canonicalizer<'a> = Box<
+    dyn FnOnce(handy_url::HandyUrl, &options::SurtrOptions) -> Result<handy_url::HandyUrl, String>
+        + 'a,
+>;
+
+pub fn surt<'a>(
     url: Option<&str>,
     canonicalizer: Option<Canonicalizer>,
-    options: Option<&options::SurtrOptions>,
+    options: Option<options::SurtrOptions>,
 ) -> Result<String, String> {
-    if url.is_none() {
+    if url == Some("") || url.is_none() {
         return Ok("-".to_string());
     }
 
     let canon: Canonicalizer = match canonicalizer {
         Some(c) => c,
-        None => &canonicalizers::default::canonicalize,
+        None => Box::new(canonicalizers::default::canonicalize),
     };
 
     let mut s_options: options::SurtrOptions = match options {
@@ -39,7 +41,7 @@ pub fn surt(
     _surt(url.unwrap(), canon, &s_options)
 }
 
-fn _surt(
+fn _surt<'a>(
     url: &str,
     canonicalizer: Canonicalizer,
     options: &options::SurtrOptions,
@@ -136,17 +138,17 @@ mod tests {
             surt(
                 Some("http://archive.org/goo/?a=2&b&a=1"),
                 None,
-                Some(&trailing_comma)
+                Some(trailing_comma.clone())
             )
             .unwrap(),
             "org,archive,)/goo?a=1&a=2&b"
         );
         assert_eq!(
-            surt(Some("dns:archive.org"), None, Some(&trailing_comma)).unwrap(),
+            surt(Some("dns:archive.org"), None, Some(trailing_comma.clone())).unwrap(),
             "dns:archive.org"
         );
         assert_eq!(
-            surt(Some("warcinfo:foo.warc.gz"), None, Some(&trailing_comma)).unwrap(),
+            surt(Some("warcinfo:foo.warc.gz"), None, Some(trailing_comma)).unwrap(),
             "warcinfo:foo.warc.gz"
         );
 
@@ -170,7 +172,7 @@ mod tests {
         assert_eq!(
             surt(
                 Some("http://www.example.com/"),
-                Some(&basic_canonicalizer),
+                Some(Box::new(basic_canonicalizer)),
                 None
             )
             .unwrap(),
@@ -189,7 +191,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
 
@@ -203,7 +205,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("host_massage", true);
@@ -218,7 +220,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", false);
 
@@ -232,7 +234,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -247,7 +249,7 @@ mod tests {
             surt(
                 Some("https://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -262,7 +264,7 @@ mod tests {
             surt(
                 Some("ftp://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", false);
                     tmp.set("trailing_comma", true);
@@ -277,7 +279,7 @@ mod tests {
             surt(
                 Some("ftp://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", false);
                     tmp.set("trailing_comma", false);
@@ -292,7 +294,7 @@ mod tests {
             surt(
                 Some("ftp://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -307,7 +309,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("host_massage", false);
@@ -322,7 +324,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", false);
                     tmp.set("host_massage", false);
@@ -337,7 +339,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -353,7 +355,7 @@ mod tests {
             surt(
                 Some("https://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -369,7 +371,7 @@ mod tests {
             surt(
                 Some("ftp://www.example.com/"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -386,7 +388,7 @@ mod tests {
             surt(
                 Some("mailto:foo@example.com"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
 
@@ -400,7 +402,7 @@ mod tests {
             surt(
                 Some("mailto:foo@example.com"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("trailing_comma", true);
 
@@ -414,7 +416,7 @@ mod tests {
             surt(
                 Some("mailto:foo@example.com"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -428,7 +430,7 @@ mod tests {
             surt(
                 Some("dns:archive.org"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
 
@@ -442,7 +444,7 @@ mod tests {
             surt(
                 Some("dns:archive.org"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("trailing_comma", true);
 
@@ -456,7 +458,7 @@ mod tests {
             surt(
                 Some("dns:archive.org"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -470,7 +472,7 @@ mod tests {
             surt(
                 Some("whois://whois.isoc.org.il/shaveh.co.il"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
 
@@ -484,7 +486,7 @@ mod tests {
             surt(
                 Some("whois://whois.isoc.org.il/shaveh.co.il"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("trailing_comma", true);
 
@@ -498,7 +500,7 @@ mod tests {
             surt(
                 Some("whois://whois.isoc.org.il/shaveh.co.il"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -513,7 +515,7 @@ mod tests {
             surt(
                 Some("warcinfo:foo.warc.gz"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("trailing_comma", true);
 
@@ -527,7 +529,7 @@ mod tests {
             surt(
                 Some("warcinfo:foo.warc.gz"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
 
@@ -542,7 +544,7 @@ mod tests {
             surt(
                 Some("warcinfo:foo.warc.gz"),
                 None,
-                Some(&{
+                Some({
                     let mut tmp = def_options.clone();
                     tmp.set("with_scheme", true);
                     tmp.set("trailing_comma", true);
@@ -592,7 +594,7 @@ mod tests {
             surt(
                 Some("http://www.example.com/"),
                 None,
-                Some(&reverse_ip_opts),
+                Some(reverse_ip_opts.clone()),
             )
             .unwrap(),
             "com,example)/"
@@ -605,7 +607,7 @@ mod tests {
             surt(
                 Some("http://192.168.1.254/info/"),
                 None,
-                Some(&reverse_ip_opts),
+                Some(reverse_ip_opts.clone()),
             )
             .unwrap(),
             "192.168.1.254)/info"
@@ -616,7 +618,7 @@ mod tests {
             surt(
                 Some("http://192.168.1.254/info/"),
                 None,
-                Some(&reverse_ip_opts),
+                Some(reverse_ip_opts.clone()),
             )
             .unwrap(),
             "254,1,168,192)/info"

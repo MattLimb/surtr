@@ -1,0 +1,10 @@
+[project]
+name = "py_surtr"
+version = "0.1.0"
+description = "An alternative impementation of SURT."
+readme = "../../README.md"
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["maturin>=1,<2"]
+build-backend = "maturin"

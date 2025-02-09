@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct SurtrOptions {
-    options: HashMap<String, bool>,
+    pub options: HashMap<String, bool>,
 }
 
 impl SurtrOptions {
@@ -23,6 +23,10 @@ impl SurtrOptions {
 
     pub fn set(&mut self, option: &str, value: bool) {
         self.options.insert(option.to_string(), value);
+    }
+
+    pub fn as_items(&self) -> Vec<(String, bool)> {
+        self.options.clone().into_iter().collect()
     }
 }
 

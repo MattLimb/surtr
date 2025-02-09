@@ -1,0 +1,12 @@
+[package]
+name = "py_surtr"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "py_surtr"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23.4", features = ["extension-module"] }
+surtr = { path = "../surtr" }
