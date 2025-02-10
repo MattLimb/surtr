@@ -20,7 +20,6 @@ pub enum UrlInput {
     String(String),
     #[pyo3(transparent, annotation = "bytes")]
     Bytes(Vec<u8>),
-    // put the other cases here
 }
 
 #[derive(IntoPyObject, Debug)]
