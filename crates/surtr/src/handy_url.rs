@@ -5,7 +5,7 @@ use regex::Regex;
 use tld_extract;
 
 use crate::{
-    error::SaturError,
+    error::SurtrError,
     options::SurtrOptions,
     regex_transformer::host_to_surt,
     url_split::{self, SplitResult},
@@ -42,7 +42,7 @@ impl HandyUrl {
         format!("http://{}", url)
     }
 
-    pub fn parse(raw_url: &str) -> Result<Self, SaturError> {
+    pub fn parse(raw_url: &str) -> Result<Self, SurtrError> {
         let mut url: String = raw_url.trim().to_string();
         url = RE_SPACES.replace_all(&url, "").to_string();
 
@@ -108,7 +108,7 @@ impl HandyUrl {
         None
     }
 
-    pub fn get_url(&self, options: &SurtrOptions) -> Result<String, SaturError> {
+    pub fn get_url(&self, options: &SurtrOptions) -> Result<String, SurtrError> {
         let mut host_src = self.host.clone();
 
         // Host
@@ -129,7 +129,7 @@ impl HandyUrl {
         if options.get_or("with_scheme", true) {
             match &self.scheme {
                 Some(sch) => scheme_parts.push(&sch),
-                None => return Err(SaturError::NoSchemeFoundError),
+                None => return Err(SurtrError::NoSchemeFoundError),
             };
 
             scheme_parts.push(":");
@@ -145,7 +145,7 @@ impl HandyUrl {
         } else if host_src.is_none() {
             match &self.scheme {
                 Some(sch) => scheme_parts.push(&sch),
-                None => return Err(SaturError::NoSchemeFoundError),
+                None => return Err(SurtrError::NoSchemeFoundError),
             };
             scheme_parts.push(":");
         } else {

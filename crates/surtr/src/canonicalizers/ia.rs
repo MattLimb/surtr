@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::error::SaturError;
+use crate::error::SurtrError;
 use crate::handy_url::HandyUrl;
 use crate::handy_url::DEFAULT_PORT;
 use crate::options::SurtrOptions;
@@ -11,7 +11,7 @@ lazy_static! {
     static ref RE_WWWDIGITS: Regex = Regex::new(r#"www\d*\."#).unwrap();
 }
 
-pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, SaturError> {
+pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, SurtrError> {
     let mut url = url_input;
 
     if options.get_or("host_lowercase", true) && url.host.is_some() {

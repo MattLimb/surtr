@@ -3,9 +3,9 @@ use pyo3::{create_exception, prelude::*};
 use pyo3::exceptions::PyException;
 use pyo3::types::{PyDict, PyFunction};
 use surtr;
-use surtr::error::SaturError;
+use surtr::error::SurtrError;
 
-mod py_handy_url;
+pub mod py_handy_url;
 
 create_exception!(py_surtr, SurtrException, PyException);
 create_exception!(py_surtr, UrlParseError, SurtrException);
@@ -86,22 +86,42 @@ pub fn surt<'a>(
             move |x: surtr::handy_url::HandyUrl, y: &surtr::options::SurtrOptions| {
                 let mut out: py_handy_url::PyHandyUrl = py_handy_url::PyHandyUrl::from(x);
 
-                Python::with_gil(|py| {
+                let success: Result<(), SurtrError> = Python::with_gil(|py| {
                     let py_opts = PyDict::new(py);
                     for (key, value) in y.as_items() {
                         py_opts.set_item(key, value).unwrap();
                     }
 
                     for func in li {
-                        out = func
+                        match func
                             .call::<(py_handy_url::PyHandyUrl,)>((out.clone(),), Some(&py_opts))
-                            .unwrap()
-                            .extract::<py_handy_url::PyHandyUrl>()
-                            .unwrap();
+                        {
+                            Ok(hurl) => match hurl.extract::<py_handy_url::PyHandyUrl>() {
+                                Ok(o) => out = o,
+                                Err(e) => {
+                                    return Err(SurtrError::Error(format!(
+                                        "{}",
+                                        e.value(py).to_string()
+                                    )))
+                                }
+                            },
+                            Err(e) => {
+                                return Err(SurtrError::Error(format!(
+                                    "{}",
+                                    e.value(py).to_string()
+                                )))
+                            }
+                        }
                     }
+
+                    Ok(())
                 });
 
-                Ok(out.into())
+                if success.is_ok() {
+                    return Ok(out.into());
+                } else {
+                    return Err(success.unwrap_err());
+                }
             },
         )),
         None => None,
@@ -113,9 +133,10 @@ pub fn surt<'a>(
             _ => Ok(UrlOutput::Bytes(s.as_bytes().to_vec())),
         },
         Err(e) => match e {
-            SaturError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(format!("{}", s))),
-            SaturError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(format!("{}", e))),
-            SaturError::UrlParseError(s) => Err(UrlParseError::new_err(format!("{}", s))),
+            SurtrError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(format!("{}", s))),
+            SurtrError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(format!("{}", e))),
+            SurtrError::UrlParseError(s) => Err(UrlParseError::new_err(format!("{}", s))),
+            SurtrError::Error(s) => Err(SurtrException::new_err(format!("{}", s))),
         },
     }
 }

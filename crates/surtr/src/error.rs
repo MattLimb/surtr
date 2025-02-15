@@ -1,14 +1,16 @@
 use std::fmt;
 
-pub enum SaturError {
+pub enum SurtrError {
+    Error(String),
     UrlParseError(String),
     NoSchemeFoundError,
     CanonicalizerError(String),
 }
 
-impl fmt::Display for SaturError {
+impl fmt::Display for SurtrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let err_str: String = match self {
+            Self::Error(s) => format!("{}", s),
             Self::UrlParseError(s) => format!("{}", s),
             Self::NoSchemeFoundError => "no scheme found in given URL".to_string(),
             Self::CanonicalizerError(s) => format!("{}", s),
@@ -18,12 +20,13 @@ impl fmt::Display for SaturError {
     }
 }
 
-impl fmt::Debug for SaturError {
+impl fmt::Debug for SurtrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let err_str: String = match self {
-            SaturError::UrlParseError(s) => format!("UrlParseError {{ {} }}", s),
-            Self::NoSchemeFoundError => "NoSchemeFound".to_string(),
-            SaturError::CanonicalizerError(s) => format!("EncodingError {{ {} }}", s),
+            SurtrError::Error(s) => format!("SutrError::Error {{ {} }}", s),
+            SurtrError::UrlParseError(s) => format!("SurtrError::UrlParseError {{ {} }}", s),
+            Self::NoSchemeFoundError => "SurtrError::NoSchemeFound".to_string(),
+            SurtrError::CanonicalizerError(s) => format!("SurtrError::EncodingError {{ {} }}", s),
         };
 
         write!(f, "{}", err_str)

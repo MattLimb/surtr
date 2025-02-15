@@ -72,11 +72,11 @@ pub fn strip_query_session_id(query_input: String) -> String {
             let cap_1 = captures.get(1);
             let cap_2 = captures.get(2);
 
-            if cap_1.is_some() {
-                if cap_2.is_some() {
-                    query = format!("{}{}", cap_1.unwrap().as_str(), cap_2.unwrap().as_str())
+            if let Some(c1) = cap_1 {
+                if let Some(c2) = cap_2 {
+                    query = format!("{}{}", c1.as_str(), c2.as_str())
                 } else {
-                    query = cap_1.unwrap().as_str().to_string();
+                    query = c1.as_str().to_string();
                 }
             }
         }

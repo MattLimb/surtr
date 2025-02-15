@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::error::SaturError;
+use crate::error::SurtrError;
 
 lazy_static! {
     static ref RFC2396REGEX: &'static str =
@@ -19,11 +19,11 @@ pub struct SplitResult {
 }
 
 impl SplitResult {
-    pub fn parse(url: String) -> Result<Self, SaturError> {
+    pub fn parse(url: String) -> Result<Self, SurtrError> {
         let captures = match REGEX.captures(&url) {
             Some(t) => t,
             None => {
-                return Err(SaturError::UrlParseError(
+                return Err(SurtrError::UrlParseError(
                     "url regex match failed".to_string(),
                 ))
             }

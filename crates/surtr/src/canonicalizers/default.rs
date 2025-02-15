@@ -1,9 +1,9 @@
-use crate::canonicalizers::{google, ia};
-use crate::error::SaturError;
-use crate::handy_url::HandyUrl;
-use crate::options::SurtrOptions;
+use crate::{
+    canonicalizers::google, canonicalizers::ia, error::SurtrError, handy_url::HandyUrl,
+    options::SurtrOptions,
+};
 
-pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, SaturError> {
+pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, SurtrError> {
     let mut url = url_input;
 
     url = google::canonicalize(url, options)?;
