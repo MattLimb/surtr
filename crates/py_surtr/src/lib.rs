@@ -1,10 +1,16 @@
-use pyo3::prelude::*;
+use pyo3::{create_exception, prelude::*};
 
 use pyo3::exceptions::PyException;
 use pyo3::types::{PyDict, PyFunction};
 use surtr;
+use surtr::error::SaturError;
 
 mod py_handy_url;
+
+create_exception!(py_surtr, SurtrException, PyException);
+create_exception!(py_surtr, UrlParseError, SurtrException);
+create_exception!(py_surtr, NoSchemeFoundError, SurtrException);
+create_exception!(py_surtr, CanonicalizerError, SurtrException);
 
 #[derive(FromPyObject)]
 pub enum InputFunctions<'a> {
@@ -106,11 +112,22 @@ pub fn surt<'a>(
             "string" => Ok(UrlOutput::String(s)),
             _ => Ok(UrlOutput::Bytes(s.as_bytes().to_vec())),
         },
-        Err(e) => Err(PyException::new_err(e)),
+        Err(e) => match e {
+            SaturError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(format!("{}", s))),
+            SaturError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(format!("{}", e))),
+            SaturError::UrlParseError(s) => Err(UrlParseError::new_err(format!("{}", s))),
+        },
     }
 }
 
 #[pymodule]
-pub fn py_surtr<'py>(m: &Bound<'py, PyModule>) -> PyResult<()> {
+pub fn py_surtr<'py>(py: Python<'_>, m: &Bound<'py, PyModule>) -> PyResult<()> {
+    // Custom Errors
+    m.add("SurtrException", py.get_type::<SurtrException>())?;
+    m.add("UrlParseError", py.get_type::<UrlParseError>())?;
+    m.add("NoSchemeFoundError", py.get_type::<NoSchemeFoundError>())?;
+    m.add("CanonicalizerError", py.get_type::<CanonicalizerError>())?;
+
+    // Add Functions
     m.add_function(wrap_pyfunction!(surt, m)?)
 }

@@ -7,6 +7,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use crate::canonicalizers::url_encoding::{escape_once, minimal_escape, unescape_repeatedly};
+use crate::error::SaturError;
 use crate::handy_url::HandyUrl;
 use crate::options::SurtrOptions;
 
@@ -17,7 +18,7 @@ lazy_static! {
         Regex::new(r#"^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$"#).unwrap();
 }
 
-pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<HandyUrl, String> {
+pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<HandyUrl, SaturError> {
     let mut url: HandyUrl = url_input;
     url.hash = None;
 

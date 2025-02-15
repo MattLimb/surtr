@@ -1,5 +1,7 @@
 use percent_encoding::{percent_decode_str, percent_encode, AsciiSet, NON_ALPHANUMERIC};
 
+use crate::error::SaturError;
+
 const FRAGMENT: &AsciiSet = &NON_ALPHANUMERIC
     .remove(b'!')
     .remove(b'"')
@@ -34,7 +36,7 @@ const FRAGMENT: &AsciiSet = &NON_ALPHANUMERIC
     // Add the space character
     .add(b' ');
 
-pub fn minimal_escape(input: String) -> Result<String, String> {
+pub fn minimal_escape(input: String) -> Result<String, SaturError> {
     Ok(escape_once(unescape_repeatedly(input)?))
 }
 
@@ -42,13 +44,18 @@ pub fn escape_once(input: String) -> String {
     percent_encode(&input.into_bytes(), FRAGMENT).to_string()
 }
 
-pub fn unescape_repeatedly(input: String) -> Result<String, String> {
+pub fn unescape_repeatedly(input: String) -> Result<String, SaturError> {
     let mut working_input = input.clone();
 
     loop {
         let un = match percent_decode_str(&working_input).decode_utf8() {
             Ok(t) => t.to_string(),
-            Err(e) => return Err(format!("{:?}", e)),
+            Err(e) => {
+                return Err(SaturError::CanonicalizerError(format!(
+                    "provided string is not UTF-8 encoded {}",
+                    e
+                )))
+            }
         };
 
         if un == working_input {

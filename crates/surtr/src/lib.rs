@@ -1,3 +1,4 @@
+pub mod error;
 pub mod handy_url;
 pub mod options;
 
@@ -6,7 +7,10 @@ mod regex_transformer;
 mod url_split;
 
 pub type Canonicalizer<'a> = Box<
-    dyn FnOnce(handy_url::HandyUrl, &options::SurtrOptions) -> Result<handy_url::HandyUrl, String>
+    dyn FnOnce(
+            handy_url::HandyUrl,
+            &options::SurtrOptions,
+        ) -> Result<handy_url::HandyUrl, error::SaturError>
         + 'a,
 >;
 
@@ -14,7 +18,7 @@ pub fn surt<'a>(
     url: Option<&str>,
     canonicalizer: Option<Canonicalizer>,
     options: Option<options::SurtrOptions>,
-) -> Result<String, String> {
+) -> Result<String, error::SaturError> {
     if url == Some("") || url.is_none() {
         return Ok("-".to_string());
     }
@@ -45,7 +49,7 @@ fn _surt<'a>(
     url: &str,
     canonicalizer: Canonicalizer,
     options: &options::SurtrOptions,
-) -> Result<String, String> {
+) -> Result<String, error::SaturError> {
     // Hardcoded Workaround for filedesc
     if url.starts_with("filedesc") {
         return Ok(url.to_string());
@@ -63,12 +67,14 @@ fn _surt<'a>(
 
 #[cfg(test)]
 mod tests {
+    use crate::error::SaturError;
+
     use super::*;
 
     fn basic_canonicalizer(
         url_input: handy_url::HandyUrl,
         _options: &options::SurtrOptions,
-    ) -> Result<handy_url::HandyUrl, String> {
+    ) -> Result<handy_url::HandyUrl, SaturError> {
         Ok(url_input)
     }
 

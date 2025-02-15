@@ -1,6 +1,8 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+use crate::error::SaturError;
+
 lazy_static! {
     static ref RFC2396REGEX: &'static str =
         r#"^(([a-zA-Z][a-zA-Z0-9+.-]*):)?((//([^/?#]*))?([^?#]*)(\?([^#]*))?)?(#(.*))?$"#;
@@ -17,10 +19,14 @@ pub struct SplitResult {
 }
 
 impl SplitResult {
-    pub fn parse(url: String) -> Result<Self, String> {
+    pub fn parse(url: String) -> Result<Self, SaturError> {
         let captures = match REGEX.captures(&url) {
             Some(t) => t,
-            None => return Err(String::from("url regex match failed")),
+            None => {
+                return Err(SaturError::UrlParseError(
+                    "url regex match failed".to_string(),
+                ))
+            }
         };
 
         let scheme = captures
