@@ -1,4 +1,4 @@
-from .py_surtr.py_handy_url import PyHandyUrl
+from .py_surtr.py_handy_url import PyHandyUrl as HandyUrl
 from .py_surtr import surt
 from .py_surtr import (
     CanonicalizerError,
@@ -9,7 +9,7 @@ from .py_surtr import (
 
 __all__ = [
     "surt",
-    "PyHandyUrl",
+    "HandyUrl",
     "CanonicalizerError",
     "NoSchemeFoundError",
     "SurtrException",

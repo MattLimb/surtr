@@ -78,29 +78,22 @@ pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<Hand
     Ok(url)
 }
 
-fn coerce_ip(input: &str) -> String {
-    let mut parts: Vec<u8> = vec![];
+fn coerce_ipv4(input: &str) -> String {
+    let mut byte_stream: Vec<String> = vec![];
 
-    for f in input.split(".") {
-        let decimal_int: u32 = u32::from_str_radix(f, 10).unwrap();
-        let prefix: &str = match decimal_int > 255 || decimal_int < 16 {
-            true => "0",
-            false => "",
-        };
-        let as_hex: String = format!("{}{:X}", prefix, decimal_int);
+    for input_part in input.split('.') {
+        match input_part.parse::<u8>() {
+            Ok(b) => byte_stream.push(b.to_string()),
+            Err(_) => {
+                byte_stream.push("1".to_string());
 
-        parts.extend(as_hex.into_bytes());
+                let tmp = input_part.parse::<u32>().unwrap();
+                byte_stream.push((tmp-256).to_string());
+            }
+        }
     }
 
-    let as_dec: Vec<String> = parts
-        .chunks(2)
-        .map(|chunk| {
-            u32::from_str_radix(unsafe { &String::from_utf8_unchecked(chunk.to_vec()) }, 16)
-                .unwrap()
-                .to_string()
-        })
-        .collect();
-    as_dec.join(".")
+    byte_stream.join(".")
 }
 
 pub fn attempt_ip_formats(host: String) -> Option<String> {
@@ -115,7 +108,7 @@ pub fn attempt_ip_formats(host: String) -> Option<String> {
         };
     } else {
         if RE_DECIMAL_IP.is_match(&host) {
-            return match IpAddr::from_str(&coerce_ip(&host)) {
+            return match IpAddr::from_str(&coerce_ipv4(&host)) {
                 Ok(ip) => Some(ip.to_string()),
                 Err(_) => None,
             };
