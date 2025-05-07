@@ -78,22 +78,57 @@ pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<Hand
     Ok(url)
 }
 
-fn coerce_ipv4(input: &str) -> String {
-    let mut byte_stream: Vec<String> = vec![];
+fn coerce_ipv4(input: &str) -> Option<String> {
+    let mut byte_stream: [u32; 4] = [0; 4];
 
-    for input_part in input.split('.') {
+    let mut ip_parts= input.split('.').enumerate().peekable();
+    while let Some((idx, input_part)) = ip_parts.next() {
         match input_part.parse::<u8>() {
-            Ok(b) => byte_stream.push(b.to_string()),
+            Ok(b) => byte_stream[idx] = b as u32,
             Err(_) => {
-                byte_stream.push("1".to_string());
+                if ip_parts.peek().is_some() {
+                    // IPv4 Addresses can combine octets into a single number
+                    // This HAS to be applied right to left. It cannot have octets
+                    // either side.
+                    return None;
+                }
 
-                let tmp = input_part.parse::<u32>().unwrap();
-                byte_stream.push((tmp-256).to_string());
+                if let Ok(ipt) = input_part.parse::<u32>() {
+                    byte_stream[3] = ipt;
+                } else {
+                    // Number being parsed is not a U32 or is too big.
+                    return None;
+                }
+
+                for i in 0..4 {
+                    println!("{i} {}", byte_stream[3 - i]);
+                    let item = byte_stream[3 - i];
+                    
+                    if item > 255 && i == 3 {
+                        // The number if greater than the max U8 value
+                        // and we are at the last availiable item.
+                        return None
+                    }
+
+                    if item > 255 {
+                        byte_stream[3 - i] = item % 256;
+
+                        if byte_stream[3 - (i+1)] > 0 {
+                            // Contingency - stops overflow up the chain.
+                            // This ensures the same behaviour as the Python Socket Library.
+                            return None;
+                        }
+
+                        byte_stream[3 - (i+1)] += item / 256;
+                    }
+                }
             }
         }
+
+        println!("Byte Stream: {:?}", byte_stream);
     }
 
-    byte_stream.join(".")
+    Some(byte_stream.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("."))
 }
 
 pub fn attempt_ip_formats(host: String) -> Option<String> {
@@ -108,10 +143,14 @@ pub fn attempt_ip_formats(host: String) -> Option<String> {
         };
     } else {
         if RE_DECIMAL_IP.is_match(&host) {
-            return match IpAddr::from_str(&coerce_ipv4(&host)) {
-                Ok(ip) => Some(ip.to_string()),
-                Err(_) => None,
-            };
+            if let Some(valid_ip) = &coerce_ipv4(&host) {
+                return match IpAddr::from_str(valid_ip) {
+                    Ok(ip) => Some(ip.to_string()),
+                    Err(_) => None,
+                };
+            } else {
+                return None;
+            }
         } else if RE_OCTAL_IP.is_match(&host) {
             let parts: Vec<String> = host
                 .split('.')
@@ -550,5 +589,44 @@ mod tests {
             &attempt_ip_formats("39024579298".to_string()).unwrap(),
             "22.11.210.226"
         );
+    }
+
+    #[test]
+    fn test_coerce_ip() {
+        assert_eq!(coerce_ipv4("10.0.258"), Some("10.0.1.2".to_string()));
+        assert_eq!(coerce_ipv4("10.0.512"), Some("10.0.2.0".to_string()));
+        assert_eq!(coerce_ipv4("3.3.24499"), Some("3.3.95.179".to_string()));
+        assert_eq!(coerce_ipv4("10.65330"), Some("10.0.255.50".to_string()));
+        assert_eq!(coerce_ipv4("10.65585"), Some("10.1.0.49".to_string()));
+        assert_eq!(coerce_ipv4("4228250625"), Some("252.5.252.1".to_string()));
+        assert_eq!(coerce_ipv4("4294967295"), Some("255.255.255.255".to_string()));
+        assert_eq!(coerce_ipv4("1586585523"), Some("94.145.95.179".to_string()));
+    }
+
+    #[test]
+    fn test_coerce_ip_errors() {
+        // Error state where there is a larger second octet where there shouldn't be.
+        assert_eq!(coerce_ipv4("10.65330.6"), None);
+
+        // 1 more than the u32 max.
+        assert_eq!(coerce_ipv4("4294967296"), None);
+
+        // Error state where bigger second octet adds to the first octet.
+        assert_eq!(coerce_ipv4("10.33554431"), None);
+
+        // Error if the first integer is more than 255.
+        assert_eq!(coerce_ipv4("256.3.4.5"), None);
+    }
+
+    #[test]
+    fn test_coerce_ip_leaves_valid_ips() {
+        assert_eq!(coerce_ipv4("10.0.1.2"), Some("10.0.1.2".to_string()));
+        assert_eq!(coerce_ipv4("10.0.2.0"), Some("10.0.2.0".to_string()));
+        assert_eq!(coerce_ipv4("3.3.95.179"), Some("3.3.95.179".to_string()));
+        assert_eq!(coerce_ipv4("10.0.255.50"), Some("10.0.255.50".to_string()));
+        assert_eq!(coerce_ipv4("10.1.0.49"), Some("10.1.0.49".to_string()));
+        assert_eq!(coerce_ipv4("252.5.252.1"), Some("252.5.252.1".to_string()));
+        assert_eq!(coerce_ipv4("255.255.255.255"), Some("255.255.255.255".to_string()));
+        assert_eq!(coerce_ipv4("94.145.95.179"), Some("94.145.95.179".to_string()));
     }
 }
