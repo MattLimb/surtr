@@ -101,7 +101,6 @@ fn coerce_ipv4(input: &str) -> Option<String> {
                 }
 
                 for i in 0..4 {
-                    println!("{i} {}", byte_stream[3 - i]);
                     let item = byte_stream[3 - i];
                     
                     if item > 255 && i == 3 {
@@ -124,8 +123,6 @@ fn coerce_ipv4(input: &str) -> Option<String> {
                 }
             }
         }
-
-        println!("Byte Stream: {:?}", byte_stream);
     }
 
     Some(byte_stream.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("."))
