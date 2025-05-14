@@ -1,13 +1,16 @@
 package main
 
 /*
-#cgo LDFLAGS: ./target/libgo_surtr.a -ldl
+#cgo LDFLAGS: -L${SRCDIR}/target -lgo_surtr -ldl
 typedef struct SurtrOptions SurtrOptions;
-#include "./target/go_surtr.h"
+#include "target/go_surtr.h"
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 
 func GenerateSurt(url string, options map[string]bool) string {
@@ -31,4 +34,8 @@ func GenerateSurt(url string, options map[string]bool) string {
 		result := C.GenerateSurtFromURL(url_cstr)
 		return C.GoString(result)
 	}
+}
+
+func main() {
+	fmt.Println(GenerateSurt("google.com", nil))
 }
