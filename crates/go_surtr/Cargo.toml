@@ -1,0 +1,13 @@
+[package]
+name = "go_surtr"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+surtr = { path = "../surtr" }
+
+[build-dependencies]
+cbindgen = "0.28.0"

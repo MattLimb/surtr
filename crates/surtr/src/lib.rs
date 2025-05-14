@@ -41,6 +41,10 @@ pub fn surt<'a>(
         s_options.set("with_scheme", false);
     }
 
+    if let None = url {
+        return Err(error::SurtrError::Error("No URL Provided".to_string()));
+    }
+
     // Default
     _surt(url.unwrap(), canon, &s_options)
 }
