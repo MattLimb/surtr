@@ -1,4 +1,4 @@
-package main
+package go_surtr
 
 /*
 #cgo LDFLAGS: -L${SRCDIR}/target -lgo_surtr -ldl
