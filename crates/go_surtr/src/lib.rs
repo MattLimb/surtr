@@ -4,7 +4,7 @@ use surtr::options::SurtrOptions;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn options_init() -> *mut SurtrOptions {
-    let mut new_options = SurtrOptions::default();
+    let new_options = SurtrOptions::default();
     let boxed_options = Box::new(new_options);
 
     Box::into_raw(boxed_options)
