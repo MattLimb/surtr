@@ -1,3 +1,0 @@
-module go_surtr
-
-go 1.23.4
