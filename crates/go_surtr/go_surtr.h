@@ -3,12 +3,19 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-SurtrOptions *options_init(void);
+typedef struct Results {
+  const char *output;
+  const char *error;
+} Results;
 
-void options_set(SurtrOptions *inst_ref, const char *name, bool value);
+SurtrOptions *init_options(void);
 
-void options_destroy(SurtrOptions *inst_ref);
+void destroy_options(SurtrOptions *inst_ref);
 
-const char *GenerateSurtFromURL(const char *url);
+void set_option(SurtrOptions *inst_ref, const char *name, bool value);
 
-const char *GenerateSurtFromURLWithOptions(const char *url, SurtrOptions *option_ref);
+struct Results generate_surt(const char *url);
+
+struct Results generate_surt_with_options(const char *url, SurtrOptions *option_ref);
+
+struct Results generate_surt_error(const char *_url);

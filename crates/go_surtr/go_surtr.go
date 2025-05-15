@@ -11,34 +11,64 @@ typedef struct SurtrOptions SurtrOptions;
 */
 import "C"
 import (
-	"fmt"
 	"unsafe"
 )
 
 
-func GenerateSurt(url string, options map[string]bool) string {
+type SurtError struct {
+	s string
+}
+
+func (e SurtError) Error() string {
+	return e.s
+}
+
+func PrimeOptions(options map[string]bool) *C.SurtrOptions {
+	option_struct := C.init_options()
+	defer C.destroy_options(option_struct)
+
+	for key, value := range options {
+		key_cstr := C.CString(key)
+		defer C.free(unsafe.Pointer(key_cstr))
+
+		C.set_option(option_struct, key_cstr, C.bool(value))
+	}
+
+	return option_struct
+}
+
+func GenerateSurtFromURL(url string, options map[string]bool) (string, error) {
+	url_cstr := C.CString(url)
+	defer C.free(unsafe.Pointer(url_cstr))
+
+	res := C.generate_surt(url_cstr)
+
+	if res.error != nil {
+		return "", SurtError{s: C.GoString(res.error)}
+	}
+
+	return C.GoString(res.output), nil
+}
+
+func GenerateSurtFromURLOptions(url string, options map[string]bool) (string, error) {
 	url_cstr := C.CString(url)
 	defer C.free(unsafe.Pointer(url_cstr))
 
 	if options != nil {
-		option_struct := C.options_init()
-		defer C.options_destroy(option_struct)
+		res := C.generate_surt_with_options(url_cstr, PrimeOptions(options))
 
-		for key, value := range options {
-			key_cstr := C.CString(key)
-			defer C.free(unsafe.Pointer(key_cstr))
-
-			C.options_set(option_struct, key_cstr, C.bool(value))
+		if res.error != nil {
+			return "", SurtError{s: C.GoString(res.error)}
 		}
-
-		result := C.GenerateSurtFromURLWithOptions(url_cstr, option_struct)
-		return C.GoString(result)
+	
+		return C.GoString(res.output), nil
 	} else {
-		result := C.GenerateSurtFromURL(url_cstr)
-		return C.GoString(result)
-	}
-}
+		res := C.generate_surt(url_cstr)
 
-func main() {
-	fmt.Println(GenerateSurt("google.com", nil))
+		if res.error != nil {
+			return "", SurtError{s: C.GoString(res.error)}
+		}
+	
+		return C.GoString(res.output), nil
+	}
 }

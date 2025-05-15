@@ -1,9 +1,44 @@
 use std::ffi::{CStr, CString, c_char};
 use surtr;
+use surtr::error::SurtrError;
 use surtr::options::SurtrOptions;
 
+
+#[repr(C)]
+pub struct Results {
+    output: *const c_char,
+    error: *const c_char,
+}
+
+impl Results {
+    pub fn from_string(s: String) -> Self {
+        Self {
+            output: CString::new(s).unwrap().into_raw(),
+            error: ::std::ptr::null(),
+        }
+    }
+
+    pub fn from_error(e: String) -> Self {
+        Self {
+            output: ::std::ptr::null(),
+            error: CString::new(e).unwrap().into_raw(),
+        }
+    }
+}
+
+
+fn surt(url: &str, options: Option<SurtrOptions>) -> Results {
+    match surtr::surt(Some(url), None, options) {
+        Ok(s) => Results::from_string(s),
+        Err(SurtrError::Error(e)) => Results::from_error(e.to_string()),
+        Err(SurtrError::UrlParseError(e)) => Results::from_error(e.to_string()),
+        Err(SurtrError::NoSchemeFoundError) => Results::from_error("Excpected URL Scheme - None Found".to_string()),
+        Err(SurtrError::CanonicalizerError(e)) => Results::from_error(e.to_string())
+    }
+}
+
 #[unsafe(no_mangle)]
-pub extern "C" fn options_init() -> *mut SurtrOptions {
+pub extern "C" fn init_options() -> *mut SurtrOptions {
     let new_options = SurtrOptions::default();
     let boxed_options = Box::new(new_options);
 
@@ -11,7 +46,12 @@ pub extern "C" fn options_init() -> *mut SurtrOptions {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn options_set(inst_ref: *mut SurtrOptions, name: *const c_char, value: bool) {
+pub extern "C" fn destroy_options(inst_ref: *mut SurtrOptions) {
+    let _ = unsafe { Box::from_raw(inst_ref) };
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn set_option(inst_ref: *mut SurtrOptions, name: *const c_char, value: bool) {
     let input_str = CStr::from_ptr(name).to_str().unwrap();
 
     let options_instance = &mut *inst_ref;
@@ -19,42 +59,24 @@ pub unsafe extern "C" fn options_set(inst_ref: *mut SurtrOptions, name: *const c
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn options_destroy(inst_ref: *mut SurtrOptions) {
-    let _ = unsafe { Box::from_raw(inst_ref) };
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn GenerateSurtFromURL(url: *const c_char) -> *const c_char {
+pub extern "C" fn generate_surt(url: *const c_char) -> Results {
     let input_cstr = unsafe { CStr::from_ptr(url) };
     let input = input_cstr.to_str().unwrap().to_string();
 
-    match surtr::surt(Some(&input), None, None) {
-        Ok(s) => match CString::new(s) {
-            Ok(cstring) => cstring.into_raw(),
-            Err(e) => {
-                println!("({})", e);
-                ::std::ptr::null()
-            }
-        },
-        Err(_) => ::std::ptr::null(),
-    }
+    surt(&input, None)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn GenerateSurtFromURLWithOptions(url: *const c_char, option_ref: *mut SurtrOptions) -> *const c_char {
+pub extern "C" fn generate_surt_with_options(url: *const c_char, option_ref: *mut SurtrOptions) -> Results {
     let input_cstr = unsafe { CStr::from_ptr(url) };
     let input = input_cstr.to_str().unwrap().to_string();
 
     let options = unsafe { &mut *option_ref }.clone();
 
-    match surtr::surt(Some(&input), None, Some(options)) {
-        Ok(s) => match CString::new(s) {
-            Ok(cstring) => cstring.into_raw(),
-            Err(e) => {
-                println!("({})", e);
-                ::std::ptr::null()
-            }
-        },
-        Err(_) => ::std::ptr::null(),
-    }
+    surt(&input, Some(options))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn generate_surt_error(_url: *const c_char) -> Results {
+    Results::from_error("Some Error".to_string())
 }
