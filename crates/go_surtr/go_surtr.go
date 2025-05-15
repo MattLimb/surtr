@@ -1,9 +1,9 @@
 package main
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/target -lgo_surtr -ldl
+#cgo LDFLAGS: -L${SRCDIR} -lgo_surtr -ldl
 typedef struct SurtrOptions SurtrOptions;
-#include "target/go_surtr.h"
+#include "go_surtr.h"
 #include <stdlib.h>
 */
 import "C"
