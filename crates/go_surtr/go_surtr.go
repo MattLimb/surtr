@@ -1,7 +1,10 @@
 package go_surtr
 
 /*
-#cgo LDFLAGS: -L${SRCDIR} -lgo_surtr -ldl
+#cgo LDFLAGS: -L${SRCDIR} -ldl
+#cgo darwin,arm64 LDFLAGS: -lgo_surtr_darwin_arm64
+#cgo linux,arm64 LDFLAGS: -lgo_surtr_linux_arm64
+#cgo linux,amd64 LDFLAGS: -lgo_surtr_linux_amd64
 typedef struct SurtrOptions SurtrOptions;
 #include "go_surtr.h"
 #include <stdlib.h>
