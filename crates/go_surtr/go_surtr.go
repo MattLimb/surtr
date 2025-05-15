@@ -3,7 +3,7 @@ package go_surtr
 /*
 #cgo LDFLAGS: -L${SRCDIR}/target -lgo_surtr -ldl
 typedef struct SurtrOptions SurtrOptions;
-#include "target/go_surtr.h"
+#include "${SRCDIR}/target/go_surtr.h"
 #include <stdlib.h>
 */
 import "C"
