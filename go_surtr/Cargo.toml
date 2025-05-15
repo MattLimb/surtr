@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["staticlib"]
 
 [dependencies]
-surtr = { path = "../surtr" }
+surtr = { path = "../crates/surtr" }
 
 [build-dependencies]
 cbindgen = "0.28.0"

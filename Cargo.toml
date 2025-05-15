@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "crates/go_surtr","crates/py_surtr", "crates/surtr"]
+members = ["go_surtr","crates/py_surtr", "crates/surtr"]
 
 [profile.release]
 opt-level = 2
