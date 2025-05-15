@@ -1,16 +1,13 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SurtrOptions {
     pub options: HashMap<String, bool>,
 }
 
 impl SurtrOptions {
     pub fn get(&self, option: &str) -> Option<bool> {
-        match self.options.get(option) {
-            Some(b) => Some(*b),
-            None => None,
-        }
+        self.options.get(option).copied()
     }
 
     pub fn get_or(&self, option: &str, or: bool) -> bool {
@@ -30,13 +27,6 @@ impl SurtrOptions {
     }
 }
 
-impl Default for SurtrOptions {
-    fn default() -> Self {
-        Self {
-            options: HashMap::new(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

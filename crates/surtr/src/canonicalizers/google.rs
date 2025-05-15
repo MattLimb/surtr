@@ -39,10 +39,9 @@ pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<Hand
         let mut tmp_host = unescape_repeatedly(host).unwrap();
 
         if tmp_host.as_ascii_str().is_err() {
-            match domain_to_ascii(&tmp_host) {
-                Ok(s) => tmp_host = s.to_string(),
-                Err(_) => (),
-            };
+            if let Ok(s) = domain_to_ascii(&tmp_host) {
+                tmp_host = s.to_string();
+            }
         }
 
         tmp_host = tmp_host.replace("..", ".").trim_matches('.').to_string();
@@ -129,37 +128,31 @@ fn coerce_ipv4(input: &str) -> Option<String> {
 }
 
 pub fn attempt_ip_formats(host: String) -> Option<String> {
-    if let Ok(host_digit) = u32::from_str_radix(&host, 10) {
-        let ip_addr = Ipv4Addr::from(host_digit & 0xffffffff);
+    if let Ok(host_digit) = &host.parse::<u32>() {
+        let ip_addr = Ipv4Addr::from(*host_digit);
         return Some(ip_addr.to_string());
-    } else if let Ok(host_digit) = u128::from_str_radix(&host, 10) {
+    } else if let Ok(host_digit) = &host.parse::<u128>() {
         let ip_addr = Ipv6Addr::from(host_digit & 0xffffffff);
-        return match ip_addr.to_ipv4() {
-            Some(ip) => Some(ip.to_string()),
-            None => None,
-        };
-    } else {
-        if RE_DECIMAL_IP.is_match(&host) {
-            if let Some(valid_ip) = &coerce_ipv4(&host) {
-                return match IpAddr::from_str(valid_ip) {
-                    Ok(ip) => Some(ip.to_string()),
-                    Err(_) => None,
-                };
-            } else {
-                return None;
-            }
-        } else if RE_OCTAL_IP.is_match(&host) {
-            let parts: Vec<String> = host
-                .split('.')
-                .into_iter()
-                .map(|f| u32::from_str_radix(f, 8).unwrap().to_string())
-                .collect();
-
-            return match IpAddr::from_str(&parts.join(".")) {
+        return ip_addr.to_ipv4().map(|ip| ip.to_string());
+    } else if RE_DECIMAL_IP.is_match(&host) {
+        if let Some(valid_ip) = &coerce_ipv4(&host) {
+            return match IpAddr::from_str(valid_ip) {
                 Ok(ip) => Some(ip.to_string()),
                 Err(_) => None,
             };
+        } else {
+            return None;
         }
+    } else if RE_OCTAL_IP.is_match(&host) {
+        let parts: Vec<String> = host
+            .split('.')
+            .map(|f| u32::from_str_radix(f, 8).unwrap().to_string())
+            .collect();
+
+        return match IpAddr::from_str(&parts.join(".")) {
+            Ok(ip) => Some(ip.to_string()),
+            Err(_) => None,
+        };
     }
 
     None
@@ -177,7 +170,7 @@ fn normalize_path(input: String) -> String {
         } else if p == "." {
             continue;
         } else if p == ".." {
-            if kept_paths.len() > 0 {
+            if !kept_paths.is_empty() {
                 kept_paths.pop();
             } else {
                 kept_paths.push(p);
@@ -191,9 +184,8 @@ fn normalize_path(input: String) -> String {
 
     let kept_length = kept_paths.len();
     if kept_length > 0 {
-        for i in 0..(kept_length - 1) {
-            let p = kept_paths[i];
-            if p.len() > 0 {
+        for p in kept_paths.iter().take(kept_length - 1) {
+            if !p.is_empty() {
                 output = format!("{}{}/", output, p);
             }
         }

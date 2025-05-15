@@ -49,20 +49,17 @@ impl HandyUrl {
         url = HandyUrl::add_default_scheme_if_needed(&url);
 
         url = RE_MULTIPLE_PROTOCOLS
-            .replace(&url, |caps: &regex::Captures| format!("{}", &caps[1]))
+            .replace(&url, |caps: &regex::Captures| (caps[1]).to_string())
             .to_string();
 
-        let split_url = match SplitResult::parse(String::from(&url)) {
-            Ok(su) => su,
-            Err(e) => return Err(e),
-        };
+        let split_url = SplitResult::parse(String::from(&url))?;
 
         let (host, port) = match split_url.netloc {
             Some(nl) => url_split::split_netloc(nl),
             None => (None, None),
         };
         let last_delimiter =
-            match &split_url.query.is_none() == &true && &url.clone().ends_with("?") == &true {
+            match split_url.query.is_none() && url.clone().ends_with("?") {
                 true => Some(String::from("?")),
                 false => None,
             };
@@ -128,7 +125,7 @@ impl HandyUrl {
         let mut scheme_parts: Vec<&str> = vec![];
         if options.get_or("with_scheme", true) {
             match &self.scheme {
-                Some(sch) => scheme_parts.push(&sch),
+                Some(sch) => scheme_parts.push(sch),
                 None => return Err(SurtrError::NoSchemeFoundError),
             };
 
@@ -144,7 +141,7 @@ impl HandyUrl {
             }
         } else if host_src.is_none() {
             match &self.scheme {
-                Some(sch) => scheme_parts.push(&sch),
+                Some(sch) => scheme_parts.push(sch),
                 None => return Err(SurtrError::NoSchemeFoundError),
             };
             scheme_parts.push(":");

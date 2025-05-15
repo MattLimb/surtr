@@ -31,28 +31,28 @@ impl SplitResult {
 
         let scheme = captures
             .get(2)
-            .map_or(None, |x| Some(String::from(x.as_str())));
-        let query = captures.get(7).map_or(None, |x| {
-            let q = x.as_str().replacen("?", "", 1);
+            .map(|x| String::from(x.as_str()));
+        let query = captures.get(7).and_then(|x| {
+                let q = x.as_str().replacen("?", "", 1);
 
-            if q.len() == 0 {
-                return None;
-            }
-            Some(q)
-        });
+                if q.is_empty() {
+                    return None;
+                }
+                Some(q)
+            });
         let fragment = captures
             .get(10)
-            .map_or(None, |x| Some(String::from(x.as_str())));
+            .map(|x| String::from(x.as_str()));
 
-        let mut netloc = captures.get(5).map_or(None, |x| {
-            if x.len() == 0 {
+        let mut netloc = captures.get(5).and_then(|x| {
+            if x.is_empty() {
                 return None;
             }
             Some(String::from(x.as_str()))
         });
         let mut path = captures
             .get(6)
-            .map_or(None, |x| Some(String::from(x.as_str())));
+            .map(|x| String::from(x.as_str()));
 
         (netloc, path) = match &scheme {
             None => (netloc, path),
@@ -68,7 +68,7 @@ impl SplitResult {
                         tmpnl = Some(String::from(shst));
                         tmpp = Some(format!("/{}", spth));
                     } else {
-                        tmpnl = Some(String::from(pth));
+                        tmpnl = Some(pth);
                         tmpp = Some(String::from("/"));
                     }
                 };
@@ -78,7 +78,7 @@ impl SplitResult {
         };
 
         if let Some(pth) = &path {
-            if pth.len() == 0 {
+            if pth.is_empty() {
                 path = None;
             }
         }
@@ -96,15 +96,15 @@ impl SplitResult {
 pub fn split_netloc(netloc: String) -> (Option<String>, Option<String>) {
     let split: Vec<&str> = netloc.split(":").collect();
 
-    return (
-        split.get(0).map_or(None, |x| Some(x.to_string())),
-        split.get(1).map_or(None, |x| {
-            if x.len() == 0 {
+    (
+        split.first().map(|x| x.to_string()),
+        split.get(1).and_then(|x| {
+            if x.is_empty() {
                 return None;
             }
             Some(x.to_string())
         }),
-    );
+    )
 }
 
 #[cfg(test)]

@@ -14,7 +14,7 @@ pub type Canonicalizer<'a> = Box<
         + 'a,
 >;
 
-pub fn surt<'a>(
+pub fn surt(
     url: Option<&str>,
     canonicalizer: Option<Canonicalizer>,
     options: Option<options::SurtrOptions>,
@@ -41,7 +41,7 @@ pub fn surt<'a>(
         s_options.set("with_scheme", false);
     }
 
-    if let None = url {
+    if url.is_none() {
         return Err(error::SurtrError::Error("No URL Provided".to_string()));
     }
 
@@ -49,7 +49,7 @@ pub fn surt<'a>(
     _surt(url.unwrap(), canon, &s_options)
 }
 
-fn _surt<'a>(
+fn _surt(
     url: &str,
     canonicalizer: Canonicalizer,
     options: &options::SurtrOptions,

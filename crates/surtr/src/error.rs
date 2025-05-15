@@ -10,10 +10,10 @@ pub enum SurtrError {
 impl fmt::Display for SurtrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let err_str: String = match self {
-            Self::Error(s) => format!("{}", s),
-            Self::UrlParseError(s) => format!("{}", s),
+            Self::Error(s) => s.to_string(),
+            Self::UrlParseError(s) => s.to_string(),
             Self::NoSchemeFoundError => "no scheme found in given URL".to_string(),
-            Self::CanonicalizerError(s) => format!("{}", s),
+            Self::CanonicalizerError(s) => s.to_string(),
         };
 
         write!(f, "{}", err_str)

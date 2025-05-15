@@ -44,7 +44,8 @@ pub fn host_to_surt(host: String, reverse_ipaddr: bool) -> String {
 
     let mut parts: Vec<&str> = host.split(".").collect();
     parts.reverse();
-    return parts.join(",");
+    
+    parts.join(",")
 }
 
 pub fn strip_path_session_id(path_input: String) -> String {

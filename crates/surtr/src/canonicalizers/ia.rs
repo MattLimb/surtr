@@ -18,7 +18,7 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
         url.host = Some(url.host.unwrap().to_lowercase());
     }
 
-    let scheme = &url.scheme.clone().unwrap_or(String::new());
+    let scheme = &url.scheme.clone().unwrap_or_default();
 
     if options.get_or("host_massage", true) && url.host.is_some() && scheme != "dns" {
         url.host = Some(massage_host(url.host.unwrap()));
@@ -56,10 +56,8 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
             if options.get_or("path_strip_empty", false) && &path == "/" {
                 should_be_none = true;
             }
-            if options.get_or("path_strip_trailing_slash_unless_empty", true) {
-                if path.ends_with('/') && path.len() > 1 {
-                    path = path[0..(path.len() - 1)].to_string();
-                }
+            if options.get_or("path_strip_trailing_slash_unless_empty", true) && path.ends_with('/') && path.len() > 1 {
+                path = path[0..(path.len() - 1)].to_string();
             }
         }
 
@@ -71,7 +69,7 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
     }
 
     if let Some(mut query) = url.query {
-        if query.len() > 0 {
+        if !query.is_empty() {
             if options.get_or("query_strip_session_id", true) {
                 query = strip_query_session_id(query);
             }
@@ -82,7 +80,7 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
                 query = alpha_reorder_query(query);
             }
         }
-        if &query == "" && options.get_or("query_strip_empty", true) {
+        if query.is_empty() && options.get_or("query_strip_empty", true) {
             url.query = None
         } else {
             url.query = Some(query)
