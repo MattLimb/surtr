@@ -2,7 +2,6 @@ use pyo3::{create_exception, prelude::*};
 
 use pyo3::exceptions::PyException;
 use pyo3::types::{PyDict, PyFunction};
-use surtr;
 use surtr::error::SurtrError;
 
 pub mod py_handy_url;
@@ -41,10 +40,7 @@ fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::options::SurtrOpti
 
     for item in dict.items() {
         let key = item.get_item(0)?.to_string();
-        let value = match item.get_item(1)?.to_string().as_str() {
-            "True" => true,
-            _ => false,
-        };
+        let value = matches!(item.get_item(1)?.to_string().as_str(), "True");
         opts.set(&key, value);
     }
 
@@ -99,17 +95,11 @@ pub fn surt<'a>(
                             Ok(hurl) => match hurl.extract::<py_handy_url::PyHandyUrl>() {
                                 Ok(o) => out = o,
                                 Err(e) => {
-                                    return Err(SurtrError::Error(format!(
-                                        "{}",
-                                        e.value(py).to_string()
-                                    )))
+                                    return Err(SurtrError::Error(e.value(py).to_string()));
                                 }
                             },
                             Err(e) => {
-                                return Err(SurtrError::Error(format!(
-                                    "{}",
-                                    e.value(py).to_string()
-                                )))
+                                return Err(SurtrError::Error(e.to_string()));
                             }
                         }
                     }
@@ -117,10 +107,10 @@ pub fn surt<'a>(
                     Ok(())
                 });
 
-                if success.is_ok() {
-                    return Ok(out.into());
+                if let Err(e) = success {
+                    Err(e)
                 } else {
-                    return Err(success.unwrap_err());
+                    Ok(out.into())
                 }
             },
         )),
@@ -133,16 +123,16 @@ pub fn surt<'a>(
             _ => Ok(UrlOutput::Bytes(s.as_bytes().to_vec())),
         },
         Err(e) => match e {
-            SurtrError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(format!("{}", s))),
-            SurtrError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(format!("{}", e))),
-            SurtrError::UrlParseError(s) => Err(UrlParseError::new_err(format!("{}", s))),
-            SurtrError::Error(s) => Err(SurtrException::new_err(format!("{}", s))),
+            SurtrError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(s.to_string())),
+            SurtrError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(e.to_string())),
+            SurtrError::UrlParseError(s) => Err(UrlParseError::new_err(s.to_string())),
+            SurtrError::Error(s) => Err(SurtrException::new_err(s.to_string())),
         },
     }
 }
 
 #[pymodule]
-pub fn py_surtr<'py>(py: Python<'_>, m: &Bound<'py, PyModule>) -> PyResult<()> {
+pub fn py_surtr(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Custom Errors
     m.add("SurtrException", py.get_type::<SurtrException>())?;
     m.add("UrlParseError", py.get_type::<UrlParseError>())?;

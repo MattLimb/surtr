@@ -14,7 +14,6 @@ import (
 	"unsafe"
 )
 
-
 type SurtError struct {
 	s string
 }
@@ -23,21 +22,21 @@ func (e SurtError) Error() string {
 	return e.s
 }
 
-func PrimeOptions(options map[string]bool) *C.SurtrOptions {
-	option_struct := C.init_options()
-	defer C.destroy_options(option_struct)
-
-	for key, value := range options {
-		key_cstr := C.CString(key)
-		defer C.free(unsafe.Pointer(key_cstr))
-
-		C.set_option(option_struct, key_cstr, C.bool(value))
+func CheckString(url string) (string, error) {
+	if url == "" {
+		return "", SurtError{s: "URL is empty"}
 	}
 
-	return option_struct
+	return url, nil
 }
 
-func GenerateSurtFromURL(url string, options map[string]bool) (string, error) {
+func GenerateSurtFromURL(url string) (string, error) {
+	url, err := CheckString(url)
+
+	if err != nil {
+		return "", err
+	}
+
 	url_cstr := C.CString(url)
 	defer C.free(unsafe.Pointer(url_cstr))
 
@@ -51,16 +50,34 @@ func GenerateSurtFromURL(url string, options map[string]bool) (string, error) {
 }
 
 func GenerateSurtFromURLOptions(url string, options map[string]bool) (string, error) {
+	url, err := CheckString(url)
+
+	if err != nil {
+		return "", err
+	}
+
 	url_cstr := C.CString(url)
 	defer C.free(unsafe.Pointer(url_cstr))
 
 	if options != nil {
-		res := C.generate_surt_with_options(url_cstr, PrimeOptions(options))
+		// Setup Options
+		option_struct := C.init_options()
+		defer C.destroy_options(option_struct)
+
+		for key, value := range options {
+			key_cstr := C.CString(key)
+			defer C.free(unsafe.Pointer(key_cstr))
+
+			C.set_option(option_struct, key_cstr, C.bool(value))
+		}
+
+		// Generate Surt
+		res := C.generate_surt_with_options(url_cstr, option_struct)
 
 		if res.error != nil {
 			return "", SurtError{s: C.GoString(res.error)}
 		}
-	
+
 		return C.GoString(res.output), nil
 	} else {
 		res := C.generate_surt(url_cstr)
@@ -68,7 +85,7 @@ func GenerateSurtFromURLOptions(url string, options map[string]bool) (string, er
 		if res.error != nil {
 			return "", SurtError{s: C.GoString(res.error)}
 		}
-	
+
 		return C.GoString(res.output), nil
 	}
 }

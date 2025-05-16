@@ -40,18 +40,18 @@ impl From<HandyUrl> for PyHandyUrl {
     }
 }
 
-impl Into<HandyUrl> for PyHandyUrl {
-    fn into(self) -> HandyUrl {
+impl From<PyHandyUrl> for HandyUrl {
+    fn from(val: PyHandyUrl) -> Self {
         HandyUrl {
-            scheme: self.scheme,
-            auth_user: self.auth_user,
-            auth_pass: self.auth_pass,
-            host: self.host,
-            port: self.port,
-            path: self.path,
-            query: self.query,
-            hash: self.hash,
-            last_delimiter: self.last_delimiter,
+            scheme: val.scheme,
+            auth_user: val.auth_user,
+            auth_pass: val.auth_pass,
+            host: val.host,
+            port: val.port,
+            path: val.path,
+            query: val.query,
+            hash: val.hash,
+            last_delimiter: val.last_delimiter
         }
     }
 }
