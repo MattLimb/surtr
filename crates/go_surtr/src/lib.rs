@@ -27,7 +27,7 @@ impl Results {
 
 
 fn surt(url: &str, options: Option<SurtrOptions>) -> Results {
-    match surtr::surt(Some(url), None, options) {
+    match surtr::surt(url, options) {
         Ok(s) => Results::from_string(s),
         Err(SurtrError::Error(e)) => Results::from_error(e.to_string()),
         Err(SurtrError::UrlParseError(e)) => Results::from_error(e.to_string()),

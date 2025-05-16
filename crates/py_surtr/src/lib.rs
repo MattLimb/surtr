@@ -1,7 +1,7 @@
 use pyo3::{create_exception, prelude::*};
 
 use pyo3::exceptions::PyException;
-use pyo3::types::{PyDict, PyFunction};
+use pyo3::types::PyDict;
 use surtr::error::SurtrError;
 
 pub mod py_handy_url;
@@ -10,14 +10,6 @@ create_exception!(py_surtr, SurtrException, PyException);
 create_exception!(py_surtr, UrlParseError, SurtrException);
 create_exception!(py_surtr, NoSchemeFoundError, SurtrException);
 create_exception!(py_surtr, CanonicalizerError, SurtrException);
-
-#[derive(FromPyObject)]
-pub enum InputFunctions<'a> {
-    #[pyo3(transparent, annotation = "callable")]
-    Function(Bound<'a, PyFunction>),
-    #[pyo3(transparent, annotation = "list[callable]")]
-    FunctionList(Vec<Bound<'a, PyFunction>>),
-}
 
 #[derive(FromPyObject, Debug)]
 pub enum UrlInput {
@@ -48,10 +40,9 @@ fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::options::SurtrOpti
 }
 
 #[pyfunction]
-#[pyo3(signature = (url=None, canonicalizer=None, **kwargs))]
+#[pyo3(signature = (url=None, **kwargs))]
 pub fn surt<'a>(
     url: Option<UrlInput>,
-    canonicalizer: Option<InputFunctions<'a>>,
     kwargs: Option<&Bound<'_, PyDict>>,
 ) -> PyResult<UrlOutput> {
     let opts: Option<surtr::options::SurtrOptions> = match kwargs {
@@ -71,53 +62,11 @@ pub fn surt<'a>(
         },
     };
 
-    let func_li: Option<Vec<Bound<'a, PyFunction>>> = match canonicalizer {
-        Some(InputFunctions::Function(f)) => Some(vec![f.clone()]),
-        Some(InputFunctions::FunctionList(fl)) => Some(fl.clone()),
-        None => None,
-    };
+    if in_url == "".to_string() {
+        return Ok(UrlOutput::String("-".to_string()));
+    }
 
-    let canon: Option<surtr::Canonicalizer> = match func_li {
-        Some(li) => Some(Box::new(
-            move |x: surtr::handy_url::HandyUrl, y: &surtr::options::SurtrOptions| {
-                let mut out: py_handy_url::PyHandyUrl = py_handy_url::PyHandyUrl::from(x);
-
-                let success: Result<(), SurtrError> = Python::with_gil(|py| {
-                    let py_opts = PyDict::new(py);
-                    for (key, value) in y.as_items() {
-                        py_opts.set_item(key, value).unwrap();
-                    }
-
-                    for func in li {
-                        match func
-                            .call::<(py_handy_url::PyHandyUrl,)>((out.clone(),), Some(&py_opts))
-                        {
-                            Ok(hurl) => match hurl.extract::<py_handy_url::PyHandyUrl>() {
-                                Ok(o) => out = o,
-                                Err(e) => {
-                                    return Err(SurtrError::Error(e.value(py).to_string()));
-                                }
-                            },
-                            Err(e) => {
-                                return Err(SurtrError::Error(e.to_string()));
-                            }
-                        }
-                    }
-
-                    Ok(())
-                });
-
-                if let Err(e) = success {
-                    Err(e)
-                } else {
-                    Ok(out.into())
-                }
-            },
-        )),
-        None => None,
-    };
-
-    match surtr::surt(Some(&in_url), canon, opts) {
+    match surtr::surt(&in_url, opts) {
         Ok(s) => match in_type {
             "string" => Ok(UrlOutput::String(s)),
             _ => Ok(UrlOutput::Bytes(s.as_bytes().to_vec())),
