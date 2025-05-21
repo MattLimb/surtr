@@ -117,9 +117,7 @@ fn alpha_reorder_query(input: String) -> String {
 }
 
 fn massage_host(host: Option<String>) -> Option<String> {
-    if host.is_none() {
-        return None;
-    }
+    host.as_ref()?;
 
     // Unwrap is ok to use here. We know that host has a value at this point.
     let host = host.unwrap();

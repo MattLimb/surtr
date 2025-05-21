@@ -50,7 +50,9 @@ pub extern "C" fn init_options() -> *mut SurtrOptions {
 /// The caller is responsible for ensuring that the pointer to the SurtrOptions struct is valid and that the SurtrOptions struct is not null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn destroy_options(inst_ref: *mut SurtrOptions) {
-    let _ = Box::from_raw(inst_ref);
+    unsafe {
+        let _ = Box::from_raw(inst_ref);
+    };
 }
 
 /// # Safety
@@ -59,9 +61,9 @@ pub unsafe extern "C" fn destroy_options(inst_ref: *mut SurtrOptions) {
 /// The caller is responsible for ensuring that the pointer to the SurtrOptions struct is valid and that the pointer to the c_char is valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn set_option(inst_ref: *mut SurtrOptions, name: *const c_char, value: bool) {
-    let input_str = CStr::from_ptr(name).to_str().unwrap();
+    let input_str = unsafe {CStr::from_ptr(name).to_str().unwrap() };
 
-    let options_instance = &mut *inst_ref;
+    let options_instance = unsafe { &mut *inst_ref };
     options_instance.set(input_str, value);
 }
 
@@ -71,7 +73,7 @@ pub unsafe extern "C" fn set_option(inst_ref: *mut SurtrOptions, name: *const c_
 /// The caller is responsible for ensuring that the pointer to the c_char is valid and that the Results struct is not null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn generate_surt(url: *const c_char) -> Results {
-    let input_cstr = CStr::from_ptr(url);
+    let input_cstr = unsafe { CStr::from_ptr(url) };
     let input = input_cstr.to_str().unwrap().to_string();
 
     surt(&input, None)
@@ -83,10 +85,10 @@ pub unsafe extern "C" fn generate_surt(url: *const c_char) -> Results {
 /// The caller is responsible for ensuring that the pointer to the SurtrOptions struct is valid and that the Results struct is not null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn generate_surt_with_options(url: *const c_char, option_ref: *mut SurtrOptions) -> Results {
-    let input_cstr = CStr::from_ptr(url);
+    let input_cstr = unsafe { CStr::from_ptr(url) };
     let input = input_cstr.to_str().unwrap().to_string();
 
-    let options = (*option_ref).clone();
+    let options = unsafe { (*option_ref).clone() };
 
     surt(&input, Some(options.clone()))
 }

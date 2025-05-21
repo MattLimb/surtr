@@ -41,7 +41,7 @@ fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::options::SurtrOpti
 
 #[pyfunction]
 #[pyo3(signature = (url=None, **kwargs))]
-pub fn surt<'a>(
+pub fn surt(
     url: Option<UrlInput>,
     kwargs: Option<&Bound<'_, PyDict>>,
 ) -> PyResult<UrlOutput> {
@@ -62,7 +62,7 @@ pub fn surt<'a>(
         },
     };
 
-    if in_url == "".to_string() {
+    if in_url == *"" {
         return Ok(UrlOutput::String("-".to_string()));
     }
 
