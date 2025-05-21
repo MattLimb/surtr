@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use tld_extract;
+use tld_extract::{SuffixList, TLDExtract};
 
 use crate::{
     error::SurtrError,
@@ -12,12 +12,13 @@ use crate::{
 };
 
 const TLD_SOURCE: tld_extract::Source = tld_extract::Source::Snapshot;
-pub const DEFAULT_PORT: Option<String> = None;
 
 lazy_static! {
-    static ref RE_MULTIPLE_PROTOCOLS: Regex = Regex::new(r#"^(https?://)+"#).unwrap();
-    static ref RE_HAS_PROTOCOL: Regex = Regex::new(r#"^([a-zA-Z][a-zA-Z0-9\+\-\.]*):"#).unwrap();
-    static ref RE_SPACES: Regex = Regex::new(r#"[\n\r\t]"#).unwrap();
+    // These Regexes expect here, because they should always compile. The system doesn't work without them compiling
+    // so we should panic if they cannot compile.
+    static ref RE_MULTIPLE_PROTOCOLS: Regex = Regex::new(r#"^(https?://)+"#).expect("Failed to compile Multiple Protocols Regex");
+    static ref RE_HAS_PROTOCOL: Regex = Regex::new(r#"^([a-zA-Z][a-zA-Z0-9\+\-\.]*):"#).expect("Failed to compile Has Protocol Regex");
+    static ref RE_SPACES: Regex = Regex::new(r#"[\n\r\t]"#).expect("Failed to compile Spaces Regex");
 }
 
 #[derive(Debug, Clone)]
@@ -78,8 +79,8 @@ impl HandyUrl {
     }
 
     pub fn get_public_suffix(&self) -> Option<String> {
-        let suffix = tld_extract::SuffixList::new(TLD_SOURCE, false, None);
-        let mut extract = tld_extract::TLDExtract::new(suffix, true).unwrap();
+        let suffix = SuffixList::new(TLD_SOURCE, false, None);
+        let mut extract = TLDExtract::new(suffix, true).expect("TLD Extract failed to compile successfully.");
 
         if let Some(host) = &self.host {
             return match extract.extract(host) {
@@ -92,8 +93,8 @@ impl HandyUrl {
     }
 
     pub fn get_public_prefix(&self) -> Option<String> {
-        let suffix = tld_extract::SuffixList::new(TLD_SOURCE, false, None);
-        let mut extract = tld_extract::TLDExtract::new(suffix, true).unwrap();
+        let suffix = SuffixList::new(TLD_SOURCE, false, None);
+        let mut extract = TLDExtract::new(suffix, true).expect("TLD Extract failed to compile successfully.");
 
         if let Some(host) = &self.host {
             return match extract.extract(host) {
@@ -109,13 +110,13 @@ impl HandyUrl {
         let mut host_src = self.host.clone();
 
         // Host
-        if self.host.is_some() {
-            if options.get_or("public_suffix", false) {
-                host_src = self.get_public_suffix();
-            }
-            if options.get_or("surt", false) {
+        if options.get_or("public_suffix", false) && host_src.is_some() {
+            host_src = self.get_public_suffix();
+        }
+        if options.get_or("surt", false) {
+            if let Some(hst) = host_src {
                 host_src = Some(host_to_surt(
-                    host_src.unwrap(),
+                    hst.clone(),
                     options.get_or("reverse_ipaddr", true),
                 ))
             }
@@ -151,7 +152,7 @@ impl HandyUrl {
 
         let mut output_string: String = scheme_parts.join("");
 
-        if let Some(host) = host_src {
+        if let Some(host) = &host_src {
             // Auth
             if let Some(user) = &self.auth_user {
                 output_string = format!("{}{}", output_string, user);
@@ -325,7 +326,7 @@ mod tests {
                 .unwrap(),
             "dns:bücher.ch"
         );
-        // assert_eq!(HandyUrl::parse("http://bücher.ch:8080?#foo").unwrap().get_url(&opt).unwrap(), "http://b\xfccher.ch:8080/#foo");
+        // assert_eq!(HandyUrl::parse("http://bücher.ch:8080?#foo").unwrap().get_url(&opts).unwrap(), "http://b\xfccher.ch:8080/#foo");
         // assert_eq!(HandyUrl::parse("dns:bücher.ch").unwrap().get_url(&opt).unwrap(), "dns:b\xfccher.ch");
 
         // From Tymm:

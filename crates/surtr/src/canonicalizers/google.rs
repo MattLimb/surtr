@@ -13,9 +13,9 @@ use crate::options::SurtrOptions;
 
 lazy_static! {
     static ref RE_OCTAL_IP: Regex =
-        Regex::new(r#"^(0[0-7]*)(\.[0-7]+)?(\.[0-7]+)?(\.[0-7]+)?$"#).unwrap();
+        Regex::new(r#"^(0[0-7]*)(\.[0-7]+)?(\.[0-7]+)?(\.[0-7]+)?$"#).expect("Failed to compile Octal IP regex");
     static ref RE_DECIMAL_IP: Regex =
-        Regex::new(r#"^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$"#).unwrap();
+        Regex::new(r#"^([1-9][0-9]*)(\.[0-9]+)?(\.[0-9]+)?(\.[0-9]+)?$"#).expect("Failed to compile Decimal IP regex");
 }
 
 pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<HandyUrl, SurtrError> {
@@ -36,7 +36,7 @@ pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<Hand
         // I should be able to always unwrap this because Strings in
         // Rust are utf-8. Since I put one in, the only way it isn't is if
         // the library has done something.
-        let mut tmp_host = unescape_repeatedly(host).unwrap();
+        let mut tmp_host = unescape_repeatedly(host)?;
 
         if tmp_host.as_ascii_str().is_err() {
             if let Ok(s) = domain_to_ascii(&tmp_host) {
@@ -58,7 +58,7 @@ pub fn canonicalize(url_input: HandyUrl, _options: &SurtrOptions) -> Result<Hand
 
     // Emulate the start of unescapeRepeaty
     if let Some(p) = path {
-        path = Some(unescape_repeatedly(p).unwrap());
+        path = Some(unescape_repeatedly(p)?);
     }
 
     if url.host.is_some() {
@@ -82,43 +82,42 @@ fn coerce_ipv4(input: &str) -> Option<String> {
 
     let mut ip_parts= input.split('.').enumerate().peekable();
     while let Some((idx, input_part)) = ip_parts.next() {
-        match input_part.parse::<u8>() {
-            Ok(b) => byte_stream[idx] = b as u32,
-            Err(_) => {
-                if ip_parts.peek().is_some() {
-                    // IPv4 Addresses can combine octets into a single number
-                    // This HAS to be applied right to left. It cannot have octets
-                    // either side.
-                    return None;
+        if let Ok(b) = input_part.parse::<u8>() {
+            byte_stream[idx] = b as u32;
+        } else {
+            if ip_parts.peek().is_some() {
+                // IPv4 Addresses can combine octets into a single number
+                // This HAS to be applied right to left. It cannot have octets
+                // either side.
+                return None;
+            }
+
+            if let Ok(ipt) = input_part.parse::<u32>() {
+                byte_stream[3] = ipt;
+            } else {
+                // Number being parsed is not a U32 or is too big.
+                return None;
+            }
+
+            for i in 0..4 {
+                let item = byte_stream[3 - i];
+                
+                if item > 255 && i == 3 {
+                    // The number if greater than the max U8 value
+                    // and we are at the last availiable item.
+                    return None
                 }
 
-                if let Ok(ipt) = input_part.parse::<u32>() {
-                    byte_stream[3] = ipt;
-                } else {
-                    // Number being parsed is not a U32 or is too big.
-                    return None;
-                }
+                if item > 255 {
+                    byte_stream[3 - i] = item % 256;
 
-                for i in 0..4 {
-                    let item = byte_stream[3 - i];
-                    
-                    if item > 255 && i == 3 {
-                        // The number if greater than the max U8 value
-                        // and we are at the last availiable item.
-                        return None
+                    if byte_stream[3 - (i+1)] > 0 {
+                        // Contingency - stops overflow up the chain.
+                        // This ensures the same behaviour as the Python Socket Library.
+                        return None;
                     }
 
-                    if item > 255 {
-                        byte_stream[3 - i] = item % 256;
-
-                        if byte_stream[3 - (i+1)] > 0 {
-                            // Contingency - stops overflow up the chain.
-                            // This ensures the same behaviour as the Python Socket Library.
-                            return None;
-                        }
-
-                        byte_stream[3 - (i+1)] += item / 256;
-                    }
+                    byte_stream[3 - (i+1)] += item / 256;
                 }
             }
         }
@@ -128,13 +127,20 @@ fn coerce_ipv4(input: &str) -> Option<String> {
 }
 
 pub fn attempt_ip_formats(host: String) -> Option<String> {
+    // Check to see if the Host a u32 (IPv4)
     if let Ok(host_digit) = &host.parse::<u32>() {
         let ip_addr = Ipv4Addr::from(*host_digit);
         return Some(ip_addr.to_string());
-    } else if let Ok(host_digit) = &host.parse::<u128>() {
+    }
+    
+    // Check to see if the Host is a u128 (IPv6)
+    if let Ok(host_digit) = &host.parse::<u128>() {
         let ip_addr = Ipv6Addr::from(host_digit & 0xffffffff);
         return ip_addr.to_ipv4().map(|ip| ip.to_string());
-    } else if RE_DECIMAL_IP.is_match(&host) {
+    }
+    
+    // Check to see if the Host is in an Decimal IPv4 Format
+    if RE_DECIMAL_IP.is_match(&host) {
         if let Some(valid_ip) = &coerce_ipv4(&host) {
             return match IpAddr::from_str(valid_ip) {
                 Ok(ip) => Some(ip.to_string()),
@@ -143,11 +149,19 @@ pub fn attempt_ip_formats(host: String) -> Option<String> {
         } else {
             return None;
         }
-    } else if RE_OCTAL_IP.is_match(&host) {
-        let parts: Vec<String> = host
-            .split('.')
-            .map(|f| u32::from_str_radix(f, 8).unwrap().to_string())
-            .collect();
+    }
+
+    // Check to see if the Host is in an Octal Ipv4 Format.
+    if RE_OCTAL_IP.is_match(&host) {
+        let mut parts: Vec<String> = vec![];
+        
+        for part in host.split('.') {
+            if let Ok(b) = u32::from_str_radix(part, 8) {
+                parts.push(b.to_string());
+            } else {
+                return None;
+            }
+        }
 
         return match IpAddr::from_str(&parts.join(".")) {
             Ok(ip) => Some(ip.to_string()),

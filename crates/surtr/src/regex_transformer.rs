@@ -2,38 +2,40 @@ use lazy_static::lazy_static;
 use regex::{Regex, RegexBuilder};
 
 lazy_static! {
-    static ref RE_IP_ADDRESS: Regex = Regex::new(r#"(?:(?:\d{1,3}\.){3}\d{1,3})$"#).unwrap();
+    // These Regexes expect here, because they should always compile. The system doesn't work without them compiling
+    // so we should panic if they cannot compile.
+    static ref RE_IP_ADDRESS: Regex = Regex::new(r#"(?:(?:\d{1,3}\.){3}\d{1,3})$"#).expect("Failed to compile IP Address Regex");
     static ref RE_PATH_SESSIONID: Vec<Regex> = vec![
         RegexBuilder::new(r#"^(.*/)(\((?:[a-z]\([0-9a-z]{24}\))+\)/)([^\?]+\.aspx.*)$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Path Session ID Regex 0"),
         RegexBuilder::new(r#"^(.*/)(\([0-9a-z]{24}\)/)([^\?]+\.aspx.*)$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Path Session ID Regex 1"),
     ];
     static ref RE_QUERY_SESSIONID: Vec<Regex> = vec![
         RegexBuilder::new(r#"^(.*)(?:jsessionid=[0-9a-zA-Z]{32})(?:&(.*))?$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Query Session ID Regex 0"),
         RegexBuilder::new(r#"^(.*)(?:phpsessid=[0-9a-zA-Z]{32})(?:&(.*))?$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Query Session ID Regex 1"),
         RegexBuilder::new(r#"^(.*)(?:sid=[0-9a-zA-Z]{32})(?:&(.*))?$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Query Session ID Regex 2"),
         RegexBuilder::new(r#"^(.*)(?:ASPSESSIONID[a-zA-Z]{8}=[a-zA-Z]{24})(?:&(.*))?$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Query Session ID Regex 3"),
         RegexBuilder::new(r#"^(.*)(?:cfid=[^&]+&cftoken=[^&]+)(?:&(.*))?$"#)
             .case_insensitive(true)
             .build()
-            .unwrap(),
+            .expect("Failed to compile Query Session ID Regex 4"),
     ];
 }
 

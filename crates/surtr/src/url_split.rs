@@ -4,9 +4,11 @@ use regex::Regex;
 use crate::error::SurtrError;
 
 lazy_static! {
-    static ref RFC2396REGEX: &'static str =
-        r#"^(([a-zA-Z][a-zA-Z0-9+.-]*):)?((//([^/?#]*))?([^?#]*)(\?([^#]*))?)?(#(.*))?$"#;
-    static ref REGEX: Regex = Regex::new(&RFC2396REGEX).unwrap();
+    // These Regexes expect here, because they should always compile. The system doesn't work without them compiling
+    // so we should panic if they cannot compile.
+    static ref REGEX: Regex = Regex::new(
+        r#"^(([a-zA-Z][a-zA-Z0-9+.-]*):)?((//([^/?#]*))?([^?#]*)(\?([^#]*))?)?(#(.*))?$"#
+    ).expect("Failed to compile RFC2396 Regex");
 }
 
 #[derive(Debug, PartialEq, Eq)]

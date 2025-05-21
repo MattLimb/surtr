@@ -3,12 +3,11 @@ use regex::Regex;
 
 use crate::error::SurtrError;
 use crate::handy_url::HandyUrl;
-use crate::handy_url::DEFAULT_PORT;
 use crate::options::SurtrOptions;
 use crate::regex_transformer::{strip_path_session_id, strip_query_session_id};
 
 lazy_static! {
-    static ref RE_WWWDIGITS: Regex = Regex::new(r#"www\d*\."#).unwrap();
+    static ref RE_WWWDIGITS: Regex = Regex::new(r#"www\d*\."#).expect("Failed to compile www.digits regex");
 }
 
 pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<HandyUrl, SurtrError> {
@@ -21,7 +20,7 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
     let scheme = &url.scheme.clone().unwrap_or_default();
 
     if options.get_or("host_massage", true) && url.host.is_some() && scheme != "dns" {
-        url.host = Some(massage_host(url.host.unwrap()));
+        url.host = massage_host(url.host);
     }
 
     if options.get_or("auth_strip_user", true) {
@@ -32,11 +31,11 @@ pub fn canonicalize(url_input: HandyUrl, options: &SurtrOptions) -> Result<Handy
     }
 
     if options.get_or("port_strip_default", true) && url.scheme.is_some() {
-        let default_port = get_default_port(url.scheme.clone().unwrap());
+        let default_port = get_default_port(&url.scheme);
 
         if let Some(port) = &url.port {
             if port == &default_port {
-                url.port = DEFAULT_PORT;
+                url.port = None;
             }
         }
     }
@@ -117,23 +116,33 @@ fn alpha_reorder_query(input: String) -> String {
     output[0..(output.len() - 1)].to_string()
 }
 
-fn massage_host(host: String) -> String {
+fn massage_host(host: Option<String>) -> Option<String> {
+    if host.is_none() {
+        return None;
+    }
+
+    // Unwrap is ok to use here. We know that host has a value at this point.
+    let host = host.unwrap();
+
     if let Some(captues) = RE_WWWDIGITS.captures(&host) {
         if let Some(cap) = captues.get(0) {
-            return host[cap.len()..].to_string();
+            return Some(host[cap.len()..].to_string());
         }
     }
 
-    host
+    Some(host)
 }
 
-fn get_default_port(scheme: String) -> String {
-    match scheme.to_lowercase().as_str() {
-        "http" => "80",
-        "https" => "443",
-        _ => "0",
+fn get_default_port(scheme: &Option<String>) -> String {
+    if let Some(sch) = scheme {
+        return match sch.to_lowercase().as_str() {
+            "http" => "80",
+            "https" => "443",
+            _ => "0",
+        }.to_string();
     }
-    .to_string()
+
+    String::from("0")
 }
 
 #[cfg(test)]
@@ -242,19 +251,19 @@ mod tests {
     #[test]
     fn test_massage_host() {
         // These tests are from IAURLCanonicalizerTest.java
-        assert_eq!(massage_host("foo.com".to_string()), "foo.com");
-        assert_eq!(massage_host("www.foo.com".to_string()), "foo.com");
-        assert_eq!(massage_host("www12.foo.com".to_string()), "foo.com");
+        assert_eq!(massage_host(Some("foo.com".to_string())), Some("foo.com".to_string()));
+        assert_eq!(massage_host(Some("www.foo.com".to_string())), Some("foo.com".to_string()));
+        assert_eq!(massage_host(Some("www12.foo.com".to_string())), Some("foo.com".to_string()));
 
-        assert_eq!(massage_host("www2foo.com".to_string()), "www2foo.com");
-        assert_eq!(massage_host("www2.www2foo.com".to_string()), "www2foo.com");
+        assert_eq!(massage_host(Some("www2foo.com".to_string())), Some("www2foo.com".to_string()));
+        assert_eq!(massage_host(Some("www2.www2foo.com".to_string())), Some("www2foo.com".to_string()));
     }
 
     #[test]
     fn test_get_default_port() {
         // These tests are from IAURLCanonicalizerTest.java
-        assert_eq!(get_default_port("foo".to_string()), "0");
-        assert_eq!(get_default_port("http".to_string()), "80");
-        assert_eq!(get_default_port("https".to_string()), "443");
+        assert_eq!(get_default_port(&Some("foo".to_string())), "0");
+        assert_eq!(get_default_port(&Some("http".to_string())), "80");
+        assert_eq!(get_default_port(&Some("https".to_string())), "443");
     }
 }
