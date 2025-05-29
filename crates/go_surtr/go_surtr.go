@@ -30,11 +30,14 @@ func CheckString(url string) (string, error) {
 	return url, nil
 }
 
-func GenerateSurtFromURL(url string) (string, error) {
+func GenerateSurtFromURL(url string, options ...map[string]bool) (string, error) {
 	url, err := CheckString(url)
-
 	if err != nil {
 		return "", err
+	}
+
+	if len(options) > 0 {
+		return generateSurtFromURLOptions(url, options[0])
 	}
 
 	url_cstr := C.CString(url)
@@ -49,7 +52,7 @@ func GenerateSurtFromURL(url string) (string, error) {
 	return C.GoString(res.output), nil
 }
 
-func GenerateSurtFromURLOptions(url string, options map[string]bool) (string, error) {
+func generateSurtFromURLOptions(url string, options map[string]bool) (string, error) {
 	url, err := CheckString(url)
 
 	if err != nil {
