@@ -22,7 +22,7 @@ func (e SurtError) Error() string {
 	return e.s
 }
 
-func CheckString(url string) (string, error) {
+func checkString(url string) (string, error) {
 	if url == "" {
 		return "", SurtError{s: "URL is empty"}
 	}
@@ -31,7 +31,7 @@ func CheckString(url string) (string, error) {
 }
 
 func GenerateSurtFromURL(url string, options ...map[string]bool) (string, error) {
-	url, err := CheckString(url)
+	url, err := checkString(url)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +53,7 @@ func GenerateSurtFromURL(url string, options ...map[string]bool) (string, error)
 }
 
 func generateSurtFromURLOptions(url string, options map[string]bool) (string, error) {
-	url, err := CheckString(url)
+	url, err := checkString(url)
 
 	if err != nil {
 		return "", err
