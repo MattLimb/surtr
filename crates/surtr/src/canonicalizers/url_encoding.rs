@@ -36,14 +36,41 @@ const FRAGMENT: &AsciiSet = &NON_ALPHANUMERIC
     // Add the space character
     .add(b' ');
 
+// Percent Decode the input string, then pass through a single pass of percent encoding.
+//
+// # Arguments
+// 
+// * `input` - The input string to be escaped.
+//
+// # Returns
+// 
+// A Result containing the escaped string, or an error if the input string is not UTF-8 encoded.
 pub fn minimal_escape(input: String) -> Result<String, SurtrError> {
     Ok(escape_once(unescape_repeatedly(input)?))
 }
 
+// Escape the input string once using Percent Encoding.
+//
+// # Arguments
+// 
+// * `input` - The input string to be escaped.
+//
+// # Returns
+// 
+// A Result containing the escaped string.
 pub fn escape_once(input: String) -> String {
     percent_encode(&input.into_bytes(), FRAGMENT).to_string()
 }
 
+// Decode the input String until no percent encoded substrings remain.
+//
+// # Arguments
+// 
+// * `input` - The input string to be unescaped.
+//
+// # Returns
+// 
+// A Result containing the unescaped string, or an error if the input string is not UTF-8 encoded.
 pub fn unescape_repeatedly(input: String) -> Result<String, SurtrError> {
     let mut working_input = input.clone();
 

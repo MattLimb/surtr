@@ -1,12 +1,64 @@
-pub mod error;
-pub mod handy_url;
-pub mod options;
+//! A Rust based Sort-friendly URI Reordering Transform.
+//! 
+//! This crate is a Rust port of the [SURT] implementation, first produced by [The Internet Archive].
+//! 
+//! The crate intends to be as compatible as possible to the original [IA implementation]. 
+//! 
+//! Currently, custom Canonicalization functions are missing from the Public Interface.
+//! They are being considered as part of a future release.
+//! 
+//! [SURT]: http://crawler.archive.org/articles/user_manual/glossary.html#surt
+//! [The Internet Archive]: https://github.com/internetarchive/surt
+//! [IA implementation]: https://github.com/internetarchive/surt
 
+mod error;
+mod handy_url;
+mod options;
 mod canonicalizers;
 mod regex_transformer;
-mod url_split;
+pub mod url_split;
+
+pub use options::SurtrOptions;
+pub use handy_url::HandyUrl;
+pub use error::SurtrError;
 
 
+/// Returns the Result of a SURT operation.
+/// 
+/// # Arguments
+/// 
+/// * `url` - The URL to be transformed.
+/// * `options` - The options to be used for the transformation.
+/// 
+/// # Returns
+/// 
+/// A Result containing the transformed URL, or an error if the URL is invalid.
+/// 
+/// # Examples
+/// 
+/// Basic Example:
+/// 
+/// ```rust
+/// use surtr::surt;
+/// 
+/// let url = "http://www.example.com/";
+/// 
+/// let result = surt(url, None).unwrap();
+/// println!("{result}"); // -> com,example)/
+/// ```
+/// 
+/// Using Options to Adjust the output:
+/// 
+/// ```rust
+/// use surtr::{surt, SurtrOptions};
+/// 
+/// let url = "http://www.example.com/";
+/// let mut options = SurtrOptions::default();
+/// options.set("with_scheme", true);
+/// 
+/// let result = surt(url, Some(options)).unwrap();
+/// println!("{result}"); // -> http://(com,example)/
+/// ```
 pub fn surt(
     url: &str,
     options: Option<options::SurtrOptions>,
@@ -38,7 +90,7 @@ fn _surt(
     }
 
     // Parse URL
-    let mut hurl = handy_url::HandyUrl::parse(url)?;
+    let mut hurl = handy_url::HandyUrl::parse(url, options)?;
 
     // Canonicalize URL
     hurl = canonicalizers::default::canonicalize(hurl, options)?;

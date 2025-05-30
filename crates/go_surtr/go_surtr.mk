@@ -32,3 +32,6 @@ build-go-linux-release:
 build-go-surtr: build-go-darwin build-go-linux
 
 build-go-surtr-release: build-go-darwin-release build-go-linux-release
+
+test-go-surtr: build-go-surtr
+	@go test -v ./$(GO_WORKING_DIR)

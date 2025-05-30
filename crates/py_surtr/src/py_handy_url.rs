@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use surtr::handy_url::HandyUrl;
+use surtr::HandyUrl;
 
 #[pyclass]
 #[derive(Debug, Clone)]

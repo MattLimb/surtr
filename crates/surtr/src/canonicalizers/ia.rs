@@ -156,7 +156,7 @@ mod tests {
         // These tests are from IAURLCanonicalizerTest.java
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://ARCHIVE.ORG/").unwrap(),
+                HandyUrl::parse("http://ARCHIVE.ORG/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -166,7 +166,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.archive.org:80/").unwrap(),
+                HandyUrl::parse("http://www.archive.org:80/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -176,7 +176,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("https://www.archive.org:80/").unwrap(),
+                HandyUrl::parse("https://www.archive.org:80/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -186,7 +186,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.archive.org:443/").unwrap(),
+                HandyUrl::parse("http://www.archive.org:443/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -196,7 +196,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("https://www.archive.org:443/").unwrap(),
+                HandyUrl::parse("https://www.archive.org:443/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -206,7 +206,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.archive.org/big/").unwrap(),
+                HandyUrl::parse("http://www.archive.org/big/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -216,7 +216,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("dns:www.archive.org").unwrap(),
+                HandyUrl::parse("dns:www.archive.org", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()

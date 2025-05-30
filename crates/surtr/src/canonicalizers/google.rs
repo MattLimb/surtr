@@ -222,7 +222,7 @@ mod tests {
         // The tests are copied from GoogleURLCanonicalizerTest.java
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host/%25%32%35").unwrap(),
+                HandyUrl::parse("http://host/%25%32%35", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -232,7 +232,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host/%25%32%35%25%32%35").unwrap(),
+                HandyUrl::parse("http://host/%25%32%35%25%32%35", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -242,7 +242,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host/%2525252525252525").unwrap(),
+                HandyUrl::parse("http://host/%2525252525252525", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -252,7 +252,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host/asdf%25%32%35asd").unwrap(),
+                HandyUrl::parse("http://host/asdf%25%32%35asd", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -262,7 +262,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host/%%%25%32%35asd%%").unwrap(),
+                HandyUrl::parse("http://host/%%%25%32%35asd%%", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -272,7 +272,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/").unwrap(),
+                HandyUrl::parse("http://www.google.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -280,12 +280,12 @@ mod tests {
             .unwrap(),
             "http://www.google.com/"
         );
-        assert_eq!(canonicalize(HandyUrl::parse("http://%31%36%38%2e%31%38%38%2e%39%39%2e%32%36/%2E%73%65%63%75%72%65/%77%77%77%2E%65%62%61%79%2E%63%6F%6D/").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://168.188.99.26/.secure/www.ebay.com/");
-        assert_eq!(canonicalize(HandyUrl::parse("http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/");
-        assert_eq!(canonicalize(HandyUrl::parse("http://host%23.com/%257Ea%2521b%2540c%2523d%2524e%25f%255E00%252611%252A22%252833%252944_55%252B").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://host%23.com/~a!b@c%23d$e%25f^00&11*22(33)44_55+");
+        assert_eq!(canonicalize(HandyUrl::parse("http://%31%36%38%2e%31%38%38%2e%39%39%2e%32%36/%2E%73%65%63%75%72%65/%77%77%77%2E%65%62%61%79%2E%63%6F%6D/", &def_options).unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://168.188.99.26/.secure/www.ebay.com/");
+        assert_eq!(canonicalize(HandyUrl::parse("http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/", &def_options).unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://195.127.0.11/uploads/%20%20%20%20/.verify/.eBaysecure=updateuserdataxplimnbqmn-xplmvalidateinfoswqpcmlx=hgplmcx/");
+        assert_eq!(canonicalize(HandyUrl::parse("http://host%23.com/%257Ea%2521b%2540c%2523d%2524e%25f%255E00%252611%252A22%252833%252944_55%252B", &def_options).unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://host%23.com/~a!b@c%23d$e%25f^00&11*22(33)44_55+");
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://3279880203/blah").unwrap(),
+                HandyUrl::parse("http://3279880203/blah", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -295,7 +295,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/blah/..").unwrap(),
+                HandyUrl::parse("http://www.google.com/blah/..", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -304,14 +304,14 @@ mod tests {
             "http://www.google.com/"
         );
         assert_eq!(
-            canonicalize(HandyUrl::parse("www.google.com/").unwrap(), &def_options)
+            canonicalize(HandyUrl::parse("www.google.com/", &def_options).unwrap(), &def_options)
                 .unwrap()
                 .get_url(&def_options)
                 .unwrap(),
             "http://www.google.com/"
         );
         assert_eq!(
-            canonicalize(HandyUrl::parse("www.google.com").unwrap(), &def_options)
+            canonicalize(HandyUrl::parse("www.google.com", &def_options).unwrap(), &def_options)
                 .unwrap()
                 .get_url(&def_options)
                 .unwrap(),
@@ -319,7 +319,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.evil.com/blah#frag").unwrap(),
+                HandyUrl::parse("http://www.evil.com/blah#frag", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -329,7 +329,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.GOOgle.com/").unwrap(),
+                HandyUrl::parse("http://www.GOOgle.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -339,7 +339,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com.../").unwrap(),
+                HandyUrl::parse("http://www.google.com.../", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -350,7 +350,7 @@ mod tests {
 
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/foo\tbar\rbaz\n2").unwrap(),
+                HandyUrl::parse("http://www.google.com/foo\tbar\rbaz\n2", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -361,7 +361,7 @@ mod tests {
 
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/q?").unwrap(),
+                HandyUrl::parse("http://www.google.com/q?", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -371,7 +371,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/q?r?").unwrap(),
+                HandyUrl::parse("http://www.google.com/q?r?", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -381,7 +381,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.google.com/q?r?s").unwrap(),
+                HandyUrl::parse("http://www.google.com/q?r?s", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -391,7 +391,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://evil.com/foo#bar#baz").unwrap(),
+                HandyUrl::parse("http://evil.com/foo#bar#baz", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -401,7 +401,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://evil.com/foo;").unwrap(),
+                HandyUrl::parse("http://evil.com/foo;", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -411,7 +411,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://evil.com/foo?bar;").unwrap(),
+                HandyUrl::parse("http://evil.com/foo?bar;", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -427,7 +427,7 @@ mod tests {
         // assert_eq!(print(canonicalize(HandyUrl::parse("http://\u0001\u0080.com/").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap().unwrap(), &def_options) http://%01%C2%80.com/
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://\u{0001}\u{0080}.com/").unwrap(),
+                HandyUrl::parse("http://\u{0001}\u{0080}.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -441,7 +441,7 @@ mod tests {
         // assert_eq!(print(canonicalize(HandyUrl::parse("☃.com").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap().unwrap(), &def_options), http://xn--n3h.com/
         // assert_eq!(canonicalize(HandyUrl::parse("B\xfccher.ch:8080").unwrap(), &def_options).unwrap().get_url(&def_options).unwrap(), "http://xn--bcher-kva.ch:8080/");
         assert_eq!(
-            canonicalize(HandyUrl::parse("☃.com").unwrap(), &def_options)
+            canonicalize(HandyUrl::parse("☃.com", &def_options).unwrap(), &def_options)
                 .unwrap()
                 .get_url(&def_options)
                 .unwrap(),
@@ -451,7 +451,7 @@ mod tests {
         //Add these percent-encoded unicode tests
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.t%EF%BF%BD%04.82.net/").unwrap(),
+                HandyUrl::parse("http://www.t%EF%BF%BD%04.82.net/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -461,7 +461,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://notrailingslash.com").unwrap(),
+                HandyUrl::parse("http://notrailingslash.com", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -471,7 +471,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.gotaport.com:1234/").unwrap(),
+                HandyUrl::parse("http://www.gotaport.com:1234/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -481,7 +481,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("  http://www.google.com/  ").unwrap(),
+                HandyUrl::parse("  http://www.google.com/  ", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -491,7 +491,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http:// leadingspace.com/").unwrap(),
+                HandyUrl::parse("http:// leadingspace.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -501,7 +501,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://%20leadingspace.com/").unwrap(),
+                HandyUrl::parse("http://%20leadingspace.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -511,7 +511,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("%20leadingspace.com/").unwrap(),
+                HandyUrl::parse("%20leadingspace.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -521,7 +521,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("https://www.securesite.com/").unwrap(),
+                HandyUrl::parse("https://www.securesite.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -531,7 +531,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host.com/ab%23cd").unwrap(),
+                HandyUrl::parse("http://host.com/ab%23cd", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -541,7 +541,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://host.com//twoslashes?more//slashes").unwrap(),
+                HandyUrl::parse("http://host.com//twoslashes?more//slashes", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -551,7 +551,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("mailto:foo@example.com").unwrap(),
+                HandyUrl::parse("mailto:foo@example.com", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()

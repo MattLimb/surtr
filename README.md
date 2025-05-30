@@ -22,6 +22,7 @@ TODO:
 |             trailing_comma             | SURT Generation  |  false  | Append a comma after the host portion of the URL.                                                         |
 |             host_lowercase             | Canonicalization |  true   | Convert the host portion of the URL into lowercase.                                                       |
 |              host_massage              | Canonicalization |  true   | Remove superflous www. from the host. "                                                                   |
+|              auth_exclude              | URL Parsing      |  true   | Ignore the BasicAuth portion of the URL during parsing. This maintins IA behaviour.                       |
 |            auth_strip_user             | Canonicalization |  true   | Remove all basic auth from the URL.                                                                       |
 |            auth_strip_pass             | Canonicalization |  true   | Remove only the password from basic auth.                                                                 |
 |           port_strip_default           | Canonicalization |  true   | Remove the port number if it is the default for the given supported protocol. (http, https are supported) |

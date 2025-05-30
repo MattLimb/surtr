@@ -2,7 +2,7 @@ use pyo3::{create_exception, prelude::*};
 
 use pyo3::exceptions::PyException;
 use pyo3::types::PyDict;
-use surtr::error::SurtrError;
+use surtr::SurtrError;
 
 pub mod py_handy_url;
 
@@ -27,8 +27,8 @@ pub enum UrlOutput {
     Bytes(Vec<u8>),
 }
 
-fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::options::SurtrOptions> {
-    let mut opts = surtr::options::SurtrOptions::default();
+fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::SurtrOptions> {
+    let mut opts = surtr::SurtrOptions::default();
 
     for item in dict.items() {
         let key = item.get_item(0)?.to_string();
@@ -45,7 +45,7 @@ pub fn surt(
     url: Option<UrlInput>,
     kwargs: Option<&Bound<'_, PyDict>>,
 ) -> PyResult<UrlOutput> {
-    let opts: Option<surtr::options::SurtrOptions> = match kwargs {
+    let opts: Option<surtr::SurtrOptions> = match kwargs {
         None => None,
         Some(d) => Some(build_options(d)?),
     };
@@ -74,8 +74,7 @@ pub fn surt(
         Err(e) => match e {
             SurtrError::CanonicalizerError(s) => Err(CanonicalizerError::new_err(s.to_string())),
             SurtrError::NoSchemeFoundError => Err(NoSchemeFoundError::new_err(e.to_string())),
-            SurtrError::UrlParseError(s) => Err(UrlParseError::new_err(s.to_string())),
-            SurtrError::Error(s) => Err(SurtrException::new_err(s.to_string())),
+            SurtrError::UrlParseError(s) => Err(UrlParseError::new_err(s.to_string()))
         },
     }
 }

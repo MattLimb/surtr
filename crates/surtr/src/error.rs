@@ -1,16 +1,20 @@
 use std::fmt;
 
+/// All possible errors Surtr can emit.
+#[derive(Clone, PartialEq)]
 pub enum SurtrError {
-    Error(String),
+    /// A Parse Error where a URL is malformed.
     UrlParseError(String),
-    NoSchemeFoundError,
+    /// An error occurs during canonicalization.
+    /// This error is currently only present when a string is not UTF-8 encoded.
     CanonicalizerError(String),
+    /// An error which expects the URL to contain a Scheme, but doesn't.
+    NoSchemeFoundError,
 }
 
 impl fmt::Display for SurtrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let err_str: String = match self {
-            Self::Error(s) => s.to_string(),
             Self::UrlParseError(s) => s.to_string(),
             Self::NoSchemeFoundError => "no scheme found in given URL".to_string(),
             Self::CanonicalizerError(s) => s.to_string(),
@@ -23,10 +27,9 @@ impl fmt::Display for SurtrError {
 impl fmt::Debug for SurtrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let err_str: String = match self {
-            SurtrError::Error(s) => format!("SutrError::Error {{ {} }}", s),
             SurtrError::UrlParseError(s) => format!("SurtrError::UrlParseError {{ {} }}", s),
             Self::NoSchemeFoundError => "SurtrError::NoSchemeFound".to_string(),
-            SurtrError::CanonicalizerError(s) => format!("SurtrError::EncodingError {{ {} }}", s),
+            SurtrError::CanonicalizerError(s) => format!("SurtrError::CanonicalizerError {{ {} }}", s),
         };
 
         write!(f, "{}", err_str)

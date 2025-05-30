@@ -25,7 +25,7 @@ mod tests {
         // These tests are from DefaultIAURLCanonicalizerTest.java
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www.alexa.com/").unwrap(),
+                HandyUrl::parse("http://www.alexa.com/", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -35,7 +35,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://archive.org/index.html").unwrap(),
+                HandyUrl::parse("http://archive.org/index.html", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -45,7 +45,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://archive.org/index.html?").unwrap(),
+                HandyUrl::parse("http://archive.org/index.html?", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -55,7 +55,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://archive.org/index.html?a=b").unwrap(),
+                HandyUrl::parse("http://archive.org/index.html?a=b", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -65,7 +65,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://archive.org/index.html?b=b&a=b").unwrap(),
+                HandyUrl::parse("http://archive.org/index.html?b=b&a=b", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -75,7 +75,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://archive.org/index.html?b=a&b=b&a=b").unwrap(),
+                HandyUrl::parse("http://archive.org/index.html?b=a&b=b&a=b", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()
@@ -85,7 +85,7 @@ mod tests {
         );
         assert_eq!(
             canonicalize(
-                HandyUrl::parse("http://www34.archive.org/index.html?b=a&b=b&a=b").unwrap(),
+                HandyUrl::parse("http://www34.archive.org/index.html?b=a&b=b&a=b", &def_options).unwrap(),
                 &def_options
             )
             .unwrap()

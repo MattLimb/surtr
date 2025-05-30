@@ -4,6 +4,8 @@ use regex::{Regex, RegexBuilder};
 lazy_static! {
     // These Regexes expect here, because they should always compile. The system doesn't work without them compiling
     // so we should panic if they cannot compile.
+
+    // These Regular Expressions are carried over from IA. They help us identify IPv4 Addresses and Session IDs.
     static ref RE_IP_ADDRESS: Regex = Regex::new(r#"(?:(?:\d{1,3}\.){3}\d{1,3})$"#).expect("Failed to compile IP Address Regex");
     static ref RE_PATH_SESSIONID: Vec<Regex> = vec![
         RegexBuilder::new(r#"^(.*/)(\((?:[a-z]\([0-9a-z]{24}\))+\)/)([^\?]+\.aspx.*)$"#)
@@ -39,6 +41,16 @@ lazy_static! {
     ];
 }
 
+// Convert an IPv4 Address to its SURT representation.
+// 
+// # Arguments
+// 
+// `host` - A String containing the IPv4 Address to convert.
+// `reverse_ipaddr` - A Boolean indicating if the IPv4 Address should be reversed.
+// 
+// # Returns
+// 
+// A String containing the SURT representation of the IPv4 Address.
 pub fn host_to_surt(host: String, reverse_ipaddr: bool) -> String {
     if !reverse_ipaddr && RE_IP_ADDRESS.is_match(&host) {
         return host;
@@ -50,6 +62,15 @@ pub fn host_to_surt(host: String, reverse_ipaddr: bool) -> String {
     parts.join(",")
 }
 
+// Strip the Session ID from a given Path.
+//
+// # Arguments
+// 
+// `path_input` - A String containing the Path to strip the Session ID from.
+//
+// # Returns
+// 
+// A String containing the Path with the Session ID stripped from it.
 pub fn strip_path_session_id(path_input: String) -> String {
     let mut path = path_input;
 
@@ -67,6 +88,15 @@ pub fn strip_path_session_id(path_input: String) -> String {
     path
 }
 
+// Strip the Session ID from a given Query.
+//
+// # Arguments
+// 
+// `query_input` - A String containing the Query to strip the Session ID from.
+//
+// # Returns
+//
+// A String containing the Query with the Session ID stripped from it.
 pub fn strip_query_session_id(query_input: String) -> String {
     let mut query = query_input;
 
