@@ -1,16 +1,15 @@
 use pyo3::{create_exception, prelude::*};
-
 use pyo3::exceptions::PyException;
 use pyo3::types::PyDict;
 use surtr::SurtrError;
-
-pub mod py_handy_url;
 
 create_exception!(py_surtr, SurtrException, PyException);
 create_exception!(py_surtr, UrlParseError, SurtrException);
 create_exception!(py_surtr, NoSchemeFoundError, SurtrException);
 create_exception!(py_surtr, CanonicalizerError, SurtrException);
 
+/// UrlInput is the Rust Enums to allow a Python String
+/// or a Python Bytes String to be passed into the surt function.
 #[derive(FromPyObject, Debug)]
 pub enum UrlInput {
     #[pyo3(transparent, annotation = "str")]
@@ -19,6 +18,9 @@ pub enum UrlInput {
     Bytes(Vec<u8>),
 }
 
+
+/// UrlInput is the Rust Enums to allow a Python String
+/// or a Python Bytes String to be returned from the surt function.
 #[derive(IntoPyObject, Debug)]
 pub enum UrlOutput {
     #[pyo3(transparent)]
@@ -27,6 +29,8 @@ pub enum UrlOutput {
     Bytes(Vec<u8>),
 }
 
+// build_options is an internal function which converts a Python **kwargs dictionary
+// into the SurtrOptions struct which is needed for Surtr.
 fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::SurtrOptions> {
     let mut opts = surtr::SurtrOptions::default();
 
@@ -39,6 +43,26 @@ fn build_options(dict: &Bound<'_, PyDict>) -> PyResult<surtr::SurtrOptions> {
     Ok(opts)
 }
 
+/// surt - Convert a URL into a Sort-friently URL Reordering Transform (SURT).
+/// 
+/// This function aims to be compatiable with the Internet Archive.
+/// 
+/// Currently missing the custom Canonicalization functions.
+/// 
+/// Args:
+/// 
+/// - url (str | bytes) - The URL to transform. String or Bytes format.
+/// - **kwargs - A set of named boolean options. View the readme for a complete list.
+/// 
+/// Returns:
+/// 
+/// The SURT as a String.
+/// 
+/// Raises:
+/// 
+/// - UrlParseError - If the URL is invalid.
+/// - NoSchemeFoundError - If the parsing expected a Scheme, but couldn't find one.
+/// - CanonicalizerError - If there is an issue during canonicalization.
 #[pyfunction]
 #[pyo3(signature = (url=None, **kwargs))]
 pub fn surt(
@@ -79,6 +103,9 @@ pub fn surt(
     }
 }
 
+
+/// py_surtr - Rust based Surt implementation aiming to be compatiable with the Internet Archives
+/// SURT implementation.
 #[pymodule]
 pub fn py_surtr(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Custom Errors
