@@ -376,7 +376,7 @@ func TestGenerateSurtFromURLOptions(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		result, err := generateSurtFromURLOptions(testCase.url, testCase.options)
+		result, err := GenerateSurtFromURL(testCase.url, testCase.options)
 		if err != nil && !testCase.shouldError {
 			t.Errorf("Expected no error for URL: %s, but got: %v", testCase.url, err)
 		}

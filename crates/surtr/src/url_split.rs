@@ -114,7 +114,7 @@ impl SplitResult {
 
 // A struct to correctly handle the splitting of the host section of a URL
 // Supports BasicAuth username and password, in addition to splitting URLs and ports.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SplitNetloc {
     pub auth_user: Option<String>,
     pub auth_pass: Option<String>,
@@ -174,17 +174,6 @@ impl SplitNetloc {
         match netloc {
             None => Self::default(),
             Some(nl) => Self::parse(nl, auth_exclude)
-        }
-    }
-}
-
-impl Default for SplitNetloc {
-    fn default() -> Self {
-        Self {
-            auth_user: None,
-            auth_pass: None,
-            domain: None,
-            port: None
         }
     }
 }

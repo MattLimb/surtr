@@ -17,7 +17,6 @@
 
 
 use std::ffi::{CStr, CString, c_char};
-use surtr::SurtrError;
 use surtr::SurtrOptions;
 
 /// A CStyle Struct to pass errors back to Go.
@@ -77,9 +76,7 @@ impl Results {
 fn surt(url: &str, options: Option<SurtrOptions>) -> Results {
     match surtr::surt(url, options) {
         Ok(s) => Results::from_string(s),
-        Err(SurtrError::UrlParseError(e)) => Results::from_error(e.to_string()),
-        Err(SurtrError::NoSchemeFoundError) => Results::from_error("Excpected URL Scheme - None Found".to_string()),
-        Err(SurtrError::CanonicalizerError(e)) => Results::from_error(e.to_string())
+        Err(e) => Results::from_error(e.to_string())
     }
 }
 
@@ -182,6 +179,6 @@ pub unsafe extern "C" fn generate_surt_with_options(url: *const c_char, option_r
     let input = input_cstr.to_str().unwrap().to_string();
 
     let options = unsafe { (*option_ref).clone() };
-
+    
     surt(&input, Some(options.clone()))
 }
